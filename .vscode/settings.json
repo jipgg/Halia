@@ -1,0 +1,21 @@
+{
+    "luau-lsp.diagnostics.strictDatamodelTypes": false,
+    "luau-lsp.require.directoryAliases": {
+        "@tests": "./tests/",
+        "@builtin": "./resources/luau_library/"
+    },
+    "luau-lsp.require.mode": "relativeToFile",
+    "luau-lsp.types.definitionFiles": [
+        "resources/builtin_defs.d.luau"
+    ],
+    "luau-lsp.platform.type": "standard",
+    "luau-lsp.hover.strictDatamodelTypes": false,
+    "luau-lsp.completion.autocompleteEnd": false,
+    "luau-lsp.sourcemap.includeNonScripts": false,
+    "luau-lsp.sourcemap.enabled": false,
+    "luau-lsp.sourcemap.autogenerate": false,
+    "luau-lsp.signatureHelp.enabled": false,
+    "luau-lsp.types.documentationFiles": [
+        "resources/builtin_docs.json"
+    ]
+}

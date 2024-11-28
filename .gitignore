@@ -1,0 +1,7 @@
+.compilation-database/
+cmake-out/
+scripts/
+bin/
+*.ps1
+*.cpp_
+*.h_
