@@ -1,11 +1,11 @@
 #include "init.h"
-#include "userdata_helpers.hpp"
-#include "metamethod.h"
+#include "common/userdata_helpers.h"
+#include "common/metamethod.h"
 #include <lualib.h>
-#include "lua_atom.h"
+#include "common/NamecallAtom.h"
 #include <lualib.h>
 using namespace std::string_literals;
-static constexpr auto type = "waw.math.Vector2";
+static constexpr auto type = "Vector2";
 
 static int add(lua_State* L) {
     const auto& self = check<Vector2>(L, 1);
@@ -65,18 +65,18 @@ static int namecall(lua_State *L) {
     int atom;
     lua_namecallatom(L, &atom);
     auto& self = check<Vector2>(L, 1);
-    using la = lua_atom;
-    switch(static_cast<la>(atom)) {
-        case la::dot:
+    using A = NamecallAtom;
+    switch(static_cast<A>(atom)) {
+        case A::dot:
             lua_pushnumber(L, blaze::dot(self, check<Vector2>(L, 2)));
             return 1;
-        case la::normalized:
+        case A::normalized:
             create_raw<Vector2>(L) = self / blaze::length(self);
             return 1;
-        case la::abs:
+        case A::abs:
             create_raw<Vector2>(L) = blaze::abs(self);
             return 1;
-        case la::norm:
+        case A::norm:
             lua_pushnumber(L, blaze::length(self));
             return 1;
         default:

@@ -122,10 +122,10 @@ end
 export type process = {
     system: (command: string)->ProcessCallback,
 }
-export type LuwawRT = {
+export type standard_library = {
         filesystem: filesystem,
         math: math,
         process: process,
         Event: <Params...>()->Event<Params...>,
 }
-declare waw: LuwawRT
+declare std: standard_library

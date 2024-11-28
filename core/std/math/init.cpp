@@ -7,7 +7,7 @@ static const luaL_Reg functions[] = {
     {nullptr, nullptr}
 };
 namespace library {
-Builtin_library math{"math", [](lua_State* L) {
+BuiltinLibrary math{"math", [](lua_State* L) {
     exported::init_matrix3_meta(L);
     exported::init_vector2_meta(L);
     exported::init_vector3_meta(L);

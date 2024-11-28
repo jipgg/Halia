@@ -1,8 +1,8 @@
 #include "library.h"
 #include <lualib.h>
-#include "common.h"
+#include "common/common.h"
 #include "init.h"
-#include "userdata_helpers.hpp"
+#include "common/userdata_helpers.h"
 #include <boost/process.hpp>
 #include <iostream>
 using namespace std::string_literals;
@@ -43,7 +43,7 @@ static const luaL_Reg functions[] = {
 };
 
 namespace library {
-Builtin_library process{"process", [](lua_State* L) {
+BuiltinLibrary process{"process", [](lua_State* L) {
     exported::init_process_callback_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, functions);

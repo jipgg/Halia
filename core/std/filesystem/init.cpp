@@ -1,6 +1,7 @@
 #include "init.h"
-#include "util.h"
-#include "common.h"
+#include "common/userdata_helpers.h"
+#include "common/common.h"
+#include "common/util.h"
 #include "library.h"
 using util::resolve_path_type;
 
@@ -209,7 +210,7 @@ static const luaL_Reg filesystem_table[] = {
     {nullptr, nullptr}
 };
 namespace library {
-Builtin_library filesystem{"filesystem", [](lua_State* L) {
+BuiltinLibrary filesystem{"filesystem", [](lua_State* L) {
     exported::init_directory_entry_meta(L);
     exported::init_path_meta(L);
     lua_newtable(L);

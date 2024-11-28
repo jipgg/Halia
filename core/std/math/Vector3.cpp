@@ -1,11 +1,11 @@
 #include "init.h"
-#include "userdata_helpers.hpp"
-#include "metamethod.h"
+#include "common/userdata_helpers.h"
+#include "common/metamethod.h"
 #include <lualib.h>
-#include "lua_atom.h"
+#include "common/NamecallAtom.h"
 #include <lualib.h>
 using namespace std::string_literals;
-static constexpr auto type = "waw.math.Vector3";
+static constexpr auto type = "Vector3";
 
 static int add(lua_State* L) {
     create_raw<Vector3>(L) = check<Vector3>(L, 1) + check<Vector3>(L, 2);
@@ -71,22 +71,22 @@ static int namecall(lua_State *L) {
     int atom;
     lua_namecallatom(L, &atom);
     auto& self = check<Vector3>(L, 1);
-    using la = lua_atom;
-    switch(static_cast<la>(atom)) {
-        case la::dot: {
+    using A = NamecallAtom;
+    switch(static_cast<A>(atom)) {
+        case A::dot: {
             const double dot = blaze::dot(check<Vector3>(L, 1), check<Vector3>(L, 2));
             lua_pushnumber(L, dot);
             return 1;
         }
-        case la::normalized: {
+        case A::normalized: {
             create_raw<Vector3>(L) = blaze::normalize(check<Vector3>(L, 1));
             return 1;
         }
-        case la::abs: {
+        case A::abs: {
             create_raw<Vector3>(L) = blaze::abs(check<Vector3>(L, 1));
             return 0;
         }
-        case la::norm: {
+        case A::norm: {
             auto& r = check<Vector3>(L, 1);
             lua_pushnumber(L, blaze::length(r));
             return 1;

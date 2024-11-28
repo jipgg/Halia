@@ -1,7 +1,7 @@
 #include "init.h"
-#include "userdata_helpers.hpp"
-#include "metamethod.h"
-constexpr const char* type = "Process_callback";
+#include "common/userdata_helpers.h"
+#include "common/metamethod.h"
+constexpr const char* type = "ProcessCallback";
 constexpr std::string_view stdout_key = "stdout";
 constexpr std::string_view stderr_key = "stderr";
 constexpr std::string_view exit_code_key = "exit_code";

@@ -1,9 +1,9 @@
 #include "init.h"
 #include <lualib.h>
-#include "lua_atom.h"
-#include "userdata_helpers.hpp"
-#include "metamethod.h"
-static constexpr auto type = "waw.filesystem.Path";
+#include "common/NamecallAtom.h"
+#include "common/userdata_helpers.h"
+#include "common/metamethod.h"
+static constexpr auto type = "Path";
 
 static int div(lua_State* L) {
     Path lhs;
@@ -33,63 +33,63 @@ static int namecall(lua_State* L) {
     int atom{};
     lua_namecallatom(L, &atom);
     auto& r = check<Path>(L, 1);
-    using la = lua_atom;
-    switch (static_cast<la>(atom)) {
-        case la::stem:
+    using A = NamecallAtom;
+    switch (static_cast<A>(atom)) {
+        case A::stem:
             create<Path>(L, r.stem());
             return 1;
-        case la::is_empty:
+        case A::is_empty:
             lua_pushboolean(L, r.empty());
             return 1;
-        case la::file_name:
+        case A::file_name:
             create<Path>(L, r.filename());
             return 1;
-        case la::has_stem:
+        case A::has_stem:
             lua_pushboolean(L, r.has_stem());
             return 1;
-        case la::root_path:
+        case A::root_path:
             create<Path>(L, r.root_path());
             return 1;
-        case la::parent_path:
+        case A::parent_path:
             create<Path>(L, r.parent_path());
             return 1;
-        case la::is_absolute:
+        case A::is_absolute:
             lua_pushboolean(L, r.is_absolute());
             return 1;
-        case la::is_relative:
+        case A::is_relative:
             lua_pushboolean(L, r.is_relative());
             return 1;
-        case la::extension:
+        case A::extension:
             create<Path>(L, r.extension());
             return 1;
-        case la::has_extenson:
+        case A::has_extenson:
             lua_pushboolean(L, r.has_extension());
             return 1;
-        case la::replace_extension:
+        case A::replace_extension:
             r.replace_extension(luaL_checkstring(L, 2));
             return 0;
-        case la::relative_path:
+        case A::relative_path:
             create<Path>(L, r.relative_path());
             return 1;
-        case la::has_relative_path:
+        case A::has_relative_path:
             lua_pushboolean(L, r.has_relative_path());
             return 1;
-        case la::compare:
+        case A::compare:
             lua_pushinteger(L, r.compare(check<Path>(L, 2)));
             return 1;
-        case la::root_name:
+        case A::root_name:
             create<Path>(L, r.root_name());
             return 1;
-        case la::root_directory:
+        case A::root_directory:
             create<Path>(L, r.root_directory());
             return 1;
-        case la::has_root_path:
+        case A::has_root_path:
             lua_pushboolean(L, r.has_root_path());
             return 1;
-        case la::has_root_name:
+        case A::has_root_name:
             lua_pushboolean(L, r.has_root_name());
             return 1;
-        case la::has_root_directory:
+        case A::has_root_directory:
             lua_pushboolean(L, r.has_root_directory());
             return 1;
         default:
