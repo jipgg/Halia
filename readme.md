@@ -1,4 +1,3 @@
-# luwaw
-work in progress 2d graphics/game engine
-
+# Halia
+> work in progress
 > no documentation yet
