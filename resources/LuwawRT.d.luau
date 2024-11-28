@@ -114,9 +114,13 @@ export type math = {
         & ((e11: number?, e12: number?, e13: number?, e21: number?, e22: number?, e23: number?, e31: number?, e32: number?, e33: number?)->math_Matrix3)
         & math_Matrix3_named_constructors, 
 }
+export type process = {
+    execute_system_command: (command: string)->(),
+}
 export type LuwawRT = {
         fs: filesystem,
         math: math,
+        proc: process,
         Event: <Params...>()->Event<Params...>,
 }
 declare waw: LuwawRT

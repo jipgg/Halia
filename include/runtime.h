@@ -1,7 +1,5 @@
 #pragma once
 #include <string>
-#include "common.h"
-#include "builtin.h"
 #include <filesystem>
 #include <source_location>
 struct lua_State;

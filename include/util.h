@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <lualib.h>
+#include "builtin.h"
 #include "userdata_helpers.hpp"
 struct lua_State;
 namespace util {

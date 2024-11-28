@@ -1,6 +1,8 @@
 #pragma once
 #include "runtime.h"
+#include "builtin.h"
 #include <lualib.h>
+#include <cassert>
 #include <luaconf.h>
 namespace intern {
 inline int unique_tag_incr{0};

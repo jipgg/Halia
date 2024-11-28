@@ -209,7 +209,7 @@ static const luaL_Reg filesystem_table[] = {
     {nullptr, nullptr}
 };
 namespace library {
-Builtin_library filesystem{"fs", [](lua_State* L) {
+Builtin_library filesystem{"filesystem", [](lua_State* L) {
     exported::init_directory_entry_meta(L);
     exported::init_path_meta(L);
     lua_newtable(L);

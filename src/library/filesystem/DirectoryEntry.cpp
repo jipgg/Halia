@@ -3,7 +3,7 @@
 #include "lua_atom.h"
 #include "userdata_helpers.hpp"
 #include "metamethod.h"
-constexpr auto type = "Directory_entry";
+constexpr auto type = "waw.filesystem.DirectoryEntry";
 
 static int namecall(lua_State* L) {
     auto& r = check<fs::directory_entry>(L, 1);
@@ -48,7 +48,7 @@ const luaL_Reg metatable[] = {
 };
 namespace exported {
 void init_directory_entry_meta(lua_State *L) {
-    if (luaL_newmetatable(L, metatable_name<Directory_entry>())) {
+    if (luaL_newmetatable(L, metatable_name<DirectoryEntry>())) {
         luaL_register(L, nullptr, metatable);
         lua_pushstring(L, type);
         lua_setfield(L, -2, metamethod::type);

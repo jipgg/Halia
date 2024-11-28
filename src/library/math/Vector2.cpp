@@ -5,7 +5,7 @@
 #include "lua_atom.h"
 #include <lualib.h>
 using namespace std::string_literals;
-static constexpr auto type = "Vector2";
+static constexpr auto type = "waw.math.Vector2";
 
 static int add(lua_State* L) {
     const auto& self = check<Vector2>(L, 1);

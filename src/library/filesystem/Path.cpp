@@ -3,7 +3,7 @@
 #include "lua_atom.h"
 #include "userdata_helpers.hpp"
 #include "metamethod.h"
-static constexpr auto type = "Path";
+static constexpr auto type = "waw.filesystem.Path";
 
 static int div(lua_State* L) {
     Path lhs;

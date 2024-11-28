@@ -4,7 +4,7 @@
 #include <lualib.h>
 #include "lua_atom.h"
 #include <sstream>
-static constexpr auto type = "Matrix3";
+static constexpr auto type = "waw.meth.Matrix3";
 using namespace std::string_literals;
 
 static int err_invalid_vector_size(lua_State* L, int size, int expected) {

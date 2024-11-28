@@ -1,7 +1,7 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=resources/builtin_defs.d.luau",
+        "--definitions=LuwawRT.d.luau",
     },
     settings = {
         ["luau-lsp"] = {

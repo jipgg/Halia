@@ -2,7 +2,7 @@
 #include <filesystem>
 struct lua_State;
 namespace fs = std::filesystem;
-using Directory_entry = fs::directory_entry;
+using DirectoryEntry = fs::directory_entry;
 using Path = fs::path;
 
 namespace exported {

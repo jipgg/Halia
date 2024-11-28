@@ -1,6 +1,7 @@
 #include <cassert>
 #include "runtime.h"
 #include "util.h"
+#include "common.h"
 #include <lua.h>
 #include <lualib.h>
 #include <filesystem>

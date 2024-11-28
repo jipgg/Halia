@@ -5,8 +5,8 @@
 #include "userdata_helpers.hpp"
 #include "metamethod.h"
 using builtin::Event;
-static constexpr auto type = "Event";
-static constexpr auto connection_type = "EventConnectionId";
+static constexpr auto type = "waw.Event";
+static constexpr auto connection_type = "waw.EventConnection";
 
 Event::Event(lua_State* L): L(L), refs() {
 }
