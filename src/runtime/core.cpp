@@ -63,6 +63,7 @@ static void init_luau_state(const fs::path& main_entry_point) {
     builtin::register_event_type(main_state);
     lua_getglobal(main_state, builtin_name);
     register_builtin_library(main_state, library::filesystem);
+    register_builtin_library(main_state, library::math);
     lua_pop(main_state, 1);
     execute_script(main_state, main_entry_point);
     luaL_sandbox(main_state);

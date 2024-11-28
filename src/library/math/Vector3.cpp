@@ -1,4 +1,4 @@
-#include "math_typedefs.h"
+#include "init.h"
 #include "userdata_helpers.hpp"
 #include "metamethod.h"
 #include <lualib.h>
@@ -7,13 +7,6 @@
 using namespace std::string_literals;
 static constexpr auto type = "Vector3";
 
-static int ctor(lua_State *L) {
-    const double x = luaL_optnumber(L, 1, 0);
-    const double y = luaL_optnumber(L, 2, 0);
-    const double z = luaL_optnumber(L, 3, 0);
-    create_raw<Vector3>(L) = {x, y, z};
-    return 1;
-}
 static int add(lua_State* L) {
     create_raw<Vector3>(L) = check<Vector3>(L, 1) + check<Vector3>(L, 2);
     return 1;
@@ -102,8 +95,8 @@ static int namecall(lua_State *L) {
     }
     return 0;
 }
-namespace builtin {
-void register_vec3_type(lua_State* L) {
+namespace exported {
+void init_vector3_meta(lua_State*L) {
     if (luaL_newmetatable(L, metatable_name<Vector3>())) {
         const luaL_Reg meta[] = {
             {metamethod::index, index},
@@ -120,10 +113,14 @@ void register_vec3_type(lua_State* L) {
     lua_pushstring(L, type);
     lua_setfield(L, -2, metamethod::type);
     luaL_register(L, nullptr, meta);
-
     }
     lua_pop(L, 1);
-    lua_pushcfunction(L, ctor, type);
-    lua_setglobal(L, type);
+}
+int vector3_ctor(lua_State *L) {
+    const double x = luaL_optnumber(L, 1, 0);
+    const double y = luaL_optnumber(L, 2, 0);
+    const double z = luaL_optnumber(L, 3, 0);
+    create_raw<Vector3>(L) = {x, y, z};
+    return 1;
 }
 }

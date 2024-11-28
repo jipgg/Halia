@@ -114,8 +114,8 @@ void init_path_meta(lua_State* L) {
         luaL_register(L, nullptr, path_metatable);
         lua_pushstring(L, type);
         lua_setfield(L, -2, metamethod::type);
-        lua_pop(L, 1);
     }
+    lua_pop(L, 1);
 }
 int path_ctor(lua_State* L) {
     create<Path>(L, luaL_checkstring(L, 1));

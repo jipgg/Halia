@@ -1,4 +1,4 @@
-#include "math_typedefs.h"
+#include "init.h"
 #include "userdata_helpers.hpp"
 #include "metamethod.h"
 #include <lualib.h>
@@ -165,8 +165,8 @@ static int namecall(lua_State* L) {
     return 0;
 }
 
-namespace builtin {
-void register_mat3_type(lua_State *L) {
+namespace exported {
+void init_matrix3_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Matrix3>())) {
         const luaL_Reg meta[] = {
             {metamethod::call, call},
@@ -182,6 +182,8 @@ void register_mat3_type(lua_State *L) {
         lua_setfield(L, -2, metamethod::type);
     }
     lua_pop(L, 1);
+}
+int matrix3_ctor_table(lua_State* L) {
     using namespace std::string_literals;
     const std::string ctor_tname = (type + "_ctor"s);
     if (luaL_newmetatable(L, ctor_tname.c_str())) {
@@ -199,6 +201,6 @@ void register_mat3_type(lua_State *L) {
     luaL_register(L, nullptr, lib);
     luaL_getmetatable(L, ctor_tname.c_str());
     lua_setmetatable(L, -2);
-    lua_setglobal(L, type);
+    return 1;
 }
 }

@@ -52,7 +52,7 @@ void init_directory_entry_meta(lua_State *L) {
         luaL_register(L, nullptr, metatable);
         lua_pushstring(L, type);
         lua_setfield(L, -2, metamethod::type);
-        lua_pop(L, 1);
     }
+    lua_pop(L, 1);
 }
 }

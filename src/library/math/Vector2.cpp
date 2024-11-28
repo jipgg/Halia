@@ -1,4 +1,4 @@
-#include "math_typedefs.h"
+#include "init.h"
 #include "userdata_helpers.hpp"
 #include "metamethod.h"
 #include <lualib.h>
@@ -7,41 +7,6 @@
 using namespace std::string_literals;
 static constexpr auto type = "Vector2";
 
-static int ctor(lua_State *L) {
-    if (lua_isnone(L, 1)) {//default constructor
-        create_raw<Vector2>(L) = {};
-        return 1;
-    } else if (is_type<Vector2>(L, 1)) {//copy constructor
-        auto& v = check<Vector2>(L, 1);
-        create_raw<Vector2>(L) = v;
-        return 1;
-    } else if (lua_isnumber(L, 1)) {
-        create_raw<Vector2>(L) = {luaL_checknumber(L, 1), luaL_optnumber(L, 2, 0)};
-        return 1;
-    } else if (lua_istable(L, 1)) {//from table
-        double x{}, y{};
-        if (lua_rawgeti(L, 1, 1) == LUA_TNUMBER) {
-            x = luaL_checknumber(L, -1);
-        }
-        lua_pop(L, 1);
-        if (lua_rawgeti(L, 1, 2) == LUA_TNUMBER) {
-            y = luaL_checknumber(L, -1);
-        }
-        lua_pop(L, 1);
-        if (lua_rawgetfield(L, 1, "x") == LUA_TNUMBER) {
-            x = luaL_checknumber(L, -1);
-        }
-        lua_pop(L, 1);
-        if (lua_rawgetfield(L, 1, "y") == LUA_TNUMBER) {
-            y = luaL_checknumber(L, -1);
-        }
-        lua_pop(L, 1);
-        create_raw<Vector2>(L) = {x, y};
-        return 1;
-    }
-    luaL_error(L, "invalid initializer arguments");
-    return 0;
-}
 static int add(lua_State* L) {
     const auto& self = check<Vector2>(L, 1);
     const auto& other = check<Vector2>(L, 2);
@@ -118,8 +83,8 @@ static int namecall(lua_State *L) {
         return 0;
     }
 }
-namespace builtin {
-void register_vec2_type(lua_State* L) {
+namespace exported {
+void init_vector2_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Vector2>())) {
         const luaL_Reg meta [] = {
             {metamethod::index, index},
@@ -138,8 +103,40 @@ void register_vec2_type(lua_State* L) {
         luaL_register(L, nullptr, meta);
     }
     lua_pop(L, 1);
-    lua_pushcfunction(L, ctor, type);
-    lua_setglobal(L, type);
 }
-
+int vector2_ctor(lua_State *L) {
+    if (lua_isnone(L, 1)) {//default constructor
+        create_raw<Vector2>(L) = {};
+        return 1;
+    } else if (is_type<Vector2>(L, 1)) {//copy constructor
+        auto& v = check<Vector2>(L, 1);
+        create_raw<Vector2>(L) = v;
+        return 1;
+    } else if (lua_isnumber(L, 1)) {
+        create_raw<Vector2>(L) = {luaL_checknumber(L, 1), luaL_optnumber(L, 2, 0)};
+        return 1;
+    } else if (lua_istable(L, 1)) {//from table
+        double x{}, y{};
+        if (lua_rawgeti(L, 1, 1) == LUA_TNUMBER) {
+            x = luaL_checknumber(L, -1);
+        }
+        lua_pop(L, 1);
+        if (lua_rawgeti(L, 1, 2) == LUA_TNUMBER) {
+            y = luaL_checknumber(L, -1);
+        }
+        lua_pop(L, 1);
+        if (lua_rawgetfield(L, 1, "x") == LUA_TNUMBER) {
+            x = luaL_checknumber(L, -1);
+        }
+        lua_pop(L, 1);
+        if (lua_rawgetfield(L, 1, "y") == LUA_TNUMBER) {
+            y = luaL_checknumber(L, -1);
+        }
+        lua_pop(L, 1);
+        create_raw<Vector2>(L) = {x, y};
+        return 1;
+    }
+    luaL_error(L, "invalid initializer arguments");
+    return 0;
+}
 }
