@@ -2,46 +2,33 @@ cmake_minimum_required(VERSION 3.22.2)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-set(source_dir ${CMAKE_SOURCE_DIR}/src)
-set(include_dir ${CMAKE_SOURCE_DIR}/include)
+set(runtimes_dir ${CMAKE_SOURCE_DIR}/runtimes)
 set(resource_dir ${CMAKE_SOURCE_DIR}/resources)
 set(luau_library_dir ${resource_dir}/luau_library)
 set(resource_output_dir ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources)
-project(LuwawRT LANGUAGES CXX C)
+set(core_dir ${CMAKE_SOURCE_DIR}/core)
+set(common_dir ${CMAKE_SOURCE_DIR}/common)
+project(Halia LANGUAGES CXX C)
 
 find_package(blaze REQUIRED)
 find_package(Boost REQUIRED COMPONENTS process)
-add_subdirectory(extern/luau)
-file (GLOB_RECURSE core_files
-    ${source_dir}/common/*.cpp
-    ${source_dir}/types/*.cpp
-    ${source_dir}/runtime/*.cpp
-    ${source_dir}/library/*.cpp
-    ${source_dir}/util/*.cpp
-    ${source_dir}/util.cpp
-)
-add_library(LuwawRT.core SHARED ${core_files})
-target_include_directories(LuwawRT.core PUBLIC ${include_dir})
-target_link_libraries(LuwawRT.core PUBLIC
-    Luau.VM
-    Luau.Compiler
-    Luau.CodeGen
-    Luau.Config
-    blaze::blaze
-    Boost::process
-)
+add_subdirectory(luau)
+#common
+file (GLOB_RECURSE common_files ${common_dir}/*.cpp)
+add_library(Halia_common ${common_files})
+target_include_directories(Halia_common PRIVATE ${common_dir} ${common_dir}/include/common)
+target_include_directories(Halia_common PUBLIC ${common_dir}/include)
+target_link_libraries(Halia_common PUBLIC Luau.VM Luau.Compiler Luau.CodeGen Luau.Config blaze::blaze Boost::process)
+#core
+file (GLOB_RECURSE core_files ${core_dir}/*.cpp)
+add_library(Halia_core SHARED ${core_files})
+target_include_directories(Halia_core PRIVATE ${core_dir} ${core_dir}/include/Halia)
+target_include_directories(Halia_core PUBLIC ${core_dir}/include)
+target_link_libraries(Halia_core PUBLIC Halia_common)
+#runtime
+file(GLOB_RECURSE rt_console_sources ${runtimes_dir}/console/*.cpp)
+add_executable(Halia ${rt_console_sources})
+target_link_libraries(Halia PUBLIC Halia_core)
 
-file(GLOB_RECURSE source_files ${source_dir}/*.cpp)
-add_executable(LuwawRT ${source_files})
-target_include_directories(LuwawRT PUBLIC ${include_dir})
-target_link_libraries(LuwawRT PRIVATE
-    Luau.VM
-    Luau.Compiler
-    Luau.CodeGen
-    Luau.Config
-)
-target_link_libraries(LuwawRT PUBLIC blaze::blaze)
-target_link_libraries(LuwawRT PUBLIC Boost::process)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${resource_dir}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources")
