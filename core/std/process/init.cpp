@@ -24,7 +24,7 @@ static int system(lua_State* L) {
     while(std::getline(stdout_stream, line_dummy)) stdout_string += line_dummy;
     std::string stderr_string;
     while (std::getline(stderr_stream, line_dummy)) stderr_string += line_dummy;
-    create<ProcessCallback>(L, ProcessCallback{
+    create<System_exit_callback>(L, System_exit_callback{
         .std_out = stdout_string.size() ?
             std::make_optional(std::move(stdout_string)):
             std::nullopt,
@@ -43,7 +43,7 @@ static const luaL_Reg functions[] = {
 };
 
 namespace library {
-BuiltinLibrary process{"process", [](lua_State* L) {
+Builtin_library process{"process", [](lua_State* L) {
     exported::init_process_callback_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, functions);

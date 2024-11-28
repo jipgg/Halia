@@ -2,7 +2,7 @@
 #include "common/userdata_helpers.h"
 #include "common/metamethod.h"
 #include <lualib.h>
-#include "common/NamecallAtom.h"
+#include "common/Namecall_atom.h"
 #include <lualib.h>
 using namespace std::string_literals;
 static constexpr auto type = "Vector3";
@@ -71,7 +71,7 @@ static int namecall(lua_State *L) {
     int atom;
     lua_namecallatom(L, &atom);
     auto& self = check<Vector3>(L, 1);
-    using A = NamecallAtom;
+    using A = Namecall_atom;
     switch(static_cast<A>(atom)) {
         case A::dot: {
             const double dot = blaze::dot(check<Vector3>(L, 1), check<Vector3>(L, 2));

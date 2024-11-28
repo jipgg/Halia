@@ -1,6 +1,6 @@
 #include "init.h"
 #include <lualib.h>
-#include "common/NamecallAtom.h"
+#include "common/Namecall_atom.h"
 #include "common/userdata_helpers.h"
 #include "common/metamethod.h"
 static constexpr auto type = "Path";
@@ -33,7 +33,7 @@ static int namecall(lua_State* L) {
     int atom{};
     lua_namecallatom(L, &atom);
     auto& r = check<Path>(L, 1);
-    using A = NamecallAtom;
+    using A = Namecall_atom;
     switch (static_cast<A>(atom)) {
         case A::stem:
             create<Path>(L, r.stem());

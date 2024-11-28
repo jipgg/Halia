@@ -1,7 +1,7 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=LuwawRT.d.luau",
+        "--definitions=Halia.d.luau",
     },
     settings = {
         ["luau-lsp"] = {
@@ -10,10 +10,6 @@ require"lspconfig".luau_lsp.setup {
             },
             require = {
                 mode = "relativeToFile",
-                directoryAliases = {
-                    ["@modules"] = "./example/modules/",
-                    ["@example"] = "./example/",
-                },
             },
         }
     }

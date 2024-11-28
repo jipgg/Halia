@@ -2,7 +2,7 @@
 #include "common/userdata_helpers.h"
 #include "common/metamethod.h"
 #include <lualib.h>
-#include "common/NamecallAtom.h"
+#include "common/Namecall_atom.h"
 #include <sstream>
 static constexpr auto type = "waw.meth.Matrix3";
 using namespace std::string_literals;
@@ -149,7 +149,7 @@ static int namecall(lua_State* L) {
     auto& r = check<Matrix3>(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
-    using A = NamecallAtom;
+    using A = Namecall_atom;
     switch (static_cast<A>(atom)) {
         case A::transpose:
             create_raw<Matrix3>(L) = r.transpose();
