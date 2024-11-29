@@ -1,9 +1,10 @@
 #include "init.h"
 #include <lualib.h>
 #include "common/Namecall_atom.h"
-#include "common/userdata_helpers.h"
+#include "type_utils.h"
 #include "common/metamethod.h"
 static constexpr auto type = "Path";
+using namespace halia;
 
 static int div(lua_State* L) {
     Path lhs;

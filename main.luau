@@ -5,7 +5,8 @@ local Matrix3 = std.math.Matrix3
 local Vector2 = std.math.Vector2
 local status = std.process.system("cmd echo hello world");
 print(status.stdout, status.exit_code)
-print("echoed")
+print("abc")
+print(Vector2(10, 10) + Vector2(10, 20))
 
 local my_path = Path("main.luau");
 print(fs.exists(my_path), tostring(my_path), tostring(my_path:stem()))

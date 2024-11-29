@@ -1,5 +1,7 @@
 #pragma once
+#include <type_utils.h>
 #include <blaze/Blaze.h>
+using namespace halia;
 struct lua_State;
 
 using Vector2 = blaze::StaticVector<double, 2, blaze::defaultTransposeFlag, blaze::aligned, blaze::unpadded>;

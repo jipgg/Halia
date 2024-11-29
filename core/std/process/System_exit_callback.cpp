@@ -1,5 +1,4 @@
 #include "init.h"
-#include "common/userdata_helpers.h"
 #include "common/metamethod.h"
 constexpr const char* type = "System_exit_callback";
 constexpr std::string_view stdout_key = "stdout";
@@ -7,7 +6,7 @@ constexpr std::string_view stderr_key = "stderr";
 constexpr std::string_view exit_code_key = "exit_code";
 
 static int index(lua_State* L) {
-    const System_exit_callback& self = check<System_exit_callback>(L, 1);
+    const System_exit_callback& self = halia::check<System_exit_callback>(L, 1);
     const std::string_view key = luaL_checkstring(L, 2);
     switch (key[0]) {
         case stdout_key[0]:
@@ -34,7 +33,7 @@ static int newindex(lua_State* L) {
 
 namespace exported {
 void init_process_callback_meta(lua_State* L) {
-    if (luaL_newmetatable(L, metatable_name<System_exit_callback>())) {
+    if (luaL_newmetatable(L, halia::metatable_name<System_exit_callback>())) {
         const luaL_Reg meta[] = {
             {metamethod::index, index},
             {metamethod::newindex, newindex},

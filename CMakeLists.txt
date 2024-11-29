@@ -22,7 +22,8 @@ target_link_libraries(Halia_common PUBLIC Luau.VM Luau.Compiler Luau.CodeGen Lua
 #core
 file (GLOB_RECURSE core_files ${core_dir}/*.cpp)
 add_library(Halia_core SHARED ${core_files})
-target_include_directories(Halia_core PRIVATE ${core_dir} ${core_dir}/include/Halia)
+target_compile_definitions(Halia_core PRIVATE BUILD_HALIA_CORE_DLL)
+target_include_directories(Halia_core PRIVATE ${core_dir} ${core_dir}/include/halia)
 target_include_directories(Halia_core PUBLIC ${core_dir}/include)
 target_link_libraries(Halia_core PUBLIC Halia_common)
 #runtime

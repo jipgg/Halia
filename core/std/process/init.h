@@ -1,8 +1,10 @@
 #pragma once
+#include <type_utils.h>
 #include <lualib.h>
 #include <optional>
 #include <string>
 #include <boost/process/v1/child.hpp>
+using namespace halia;
 struct System_exit_callback{
     std::optional<std::string> std_out;
     std::optional<std::string> std_err;

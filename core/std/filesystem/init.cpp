@@ -1,9 +1,9 @@
 #include "init.h"
-#include "common/userdata_helpers.h"
 #include "common/common.h"
+#include "type_utils.h"
 #include "common/util.h"
 #include "library.h"
-using util::resolve_path_type;
+using namespace halia;
 
 static fs::copy_options to_copy_options(std::string_view str) {
     using copts = fs::copy_options;

@@ -2,7 +2,7 @@
 #include "common/Namecall_atom.h"
 #include <lualib.h>
 #include "common/common.h"
-#include "common/userdata_helpers.h"
+#include "type_utils.h"
 #include "common/metamethod.h"
 using builtin::Event;
 static constexpr auto type = "Event";
@@ -52,23 +52,23 @@ void Event::fire(int arg_count) {
     lua_pop(L, arg_count);
 }
 static int ctor(lua_State* L) {
-    create<Event>(L, L);
+    halia::create<Event>(L, L);
     return 1;
 }
 static int namecall(lua_State* L) {
     int atom;
-    auto& r = check<Event>(L, 1); 
+    auto& r = halia::check<Event>(L, 1); 
     lua_namecallatom(L, &atom);
     using A = Namecall_atom;
     switch (static_cast<A>(atom)) {
         case A::connect: {
             if (not lua_isfunction(L, 2)) return 0;
             Event::Connection connection = r.connect(2);
-            create<Event::Connection>(L, std::move(connection));
+            halia::create<Event::Connection>(L, std::move(connection));
             return 1;
         }
         case A::disconnect: {
-            r.disconnect(check<Event::Connection>(L, 2));
+            r.disconnect(halia::check<Event::Connection>(L, 2));
             return 0;
         }
         case A::fire: {
@@ -82,21 +82,21 @@ static int namecall(lua_State* L) {
     }
 }
 int connection_id_tostring(lua_State* L) {
-    auto& connection = check<Event::Connection>(L, 1);
+    auto& connection = halia::check<Event::Connection>(L, 1);
     lua_pushstring(L, std::to_string(connection.id).c_str());
     return 1;
 }
 
 namespace builtin {
 void register_event_type(lua_State* L) {
-    if (luaL_newmetatable(L, metatable_name<Event::Connection>())) {
+    if (luaL_newmetatable(L, halia::metatable_name<Event::Connection>())) {
         lua_pushcfunction(L, connection_id_tostring, "event_connection_id_tostring");
         lua_setfield(L, -2, metamethod::tostring);
         lua_pushstring(L, connection_type);
         lua_setfield(L, -2, metamethod::type);
     }
     lua_pop(L, 1);
-    if (luaL_newmetatable(L, metatable_name<Event>())) {
+    if (luaL_newmetatable(L, halia::metatable_name<Event>())) {
         const luaL_Reg lib[] = {
             {"__namecall", namecall},
             {nullptr, nullptr}

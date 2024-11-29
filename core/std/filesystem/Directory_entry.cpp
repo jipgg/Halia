@@ -1,9 +1,9 @@
 #include "init.h"
 #include <lualib.h>
 #include "common/Namecall_atom.h"
-#include "common/userdata_helpers.h"
 #include "common/metamethod.h"
 constexpr auto type = "Directory_entry";
+using namespace halia;
 
 static int namecall(lua_State* L) {
     auto& r = check<fs::directory_entry>(L, 1);

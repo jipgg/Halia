@@ -1,10 +1,9 @@
 #include "init.h"
-#include "common/userdata_helpers.h"
 #include "common/metamethod.h"
 #include <lualib.h>
 #include "common/Namecall_atom.h"
 #include <sstream>
-static constexpr auto type = "waw.meth.Matrix3";
+static constexpr auto type = "Matrix3";
 using namespace std::string_literals;
 
 static int err_invalid_vector_size(lua_State* L, int size, int expected) {

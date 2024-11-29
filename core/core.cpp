@@ -1,5 +1,5 @@
-#define HALIA_CORE_API_EXPORTS
-#include "Halia/core_api.h"
+#include "core.h"
+#include "type_utils.h"
 #include <lua.h>
 #include <lualib.h>
 #include <luaconf.h>
@@ -9,7 +9,6 @@
 #include <Luau/Compiler.h>
 #include "common/Namecall_atom.h"
 #include "lua_base.h"
-#include "common/userdata_helpers.h"
 #include "common/comptime_enum.h"
 #include "common/common.h"
 #include <stdexcept>
@@ -22,7 +21,7 @@ static fs::path bin_path;
 using Unique_event = std::unique_ptr<builtin::Event>; 
 static void register_event(lua_State* L, Unique_event& ev, const char* fieldname) {
     ev = std::make_unique<builtin::Event>(L);
-    push(L, *ev);
+    halia::push(L, *ev);
     lua_setfield(L, -2, fieldname);
 }
 
@@ -83,6 +82,10 @@ static void init(halia::core::Launch_options opts) {
     init_luau_state(opts.main_entry_point);
 }
 namespace halia {
+namespace intern {
+int unique_tag_incr{0};
+std::unordered_map<std::string, int> type_registry{};
+}
 namespace core{
 int bootstrap(Launch_options opts) {
     init(opts);

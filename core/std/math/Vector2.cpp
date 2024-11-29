@@ -1,5 +1,4 @@
 #include "init.h"
-#include "common/userdata_helpers.h"
 #include "common/metamethod.h"
 #include <lualib.h>
 #include "common/Namecall_atom.h"
