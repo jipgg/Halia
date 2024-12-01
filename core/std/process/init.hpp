@@ -3,7 +3,8 @@
 #include <lualib.h>
 #include <optional>
 #include <string>
-#include <boost/process/v1/child.hpp>
+#define _WIN32_WINNT 0x0601
+#include <boost/process.hpp>
 using namespace halia;
 struct Execution_feedback{
     std::optional<std::string> output;
@@ -11,8 +12,14 @@ struct Execution_feedback{
     int exit_code;
     bool failed_before_execution;
 };
-using Child = boost::process::child;
+using Child_process = boost::process::child;
+using Pid = boost::process::pid_t;
+enum class Process_option {
+    silent,
+};
 namespace exported {
-void init_process_callback_meta(lua_State* L);
-void init_child_meta(lua_State* L);
+void init_execution_feedback_meta(lua_State* L);
+void init_child_process_meta(lua_State* L);
+void init_pid_meta(lua_State* L);
+int child_process_ctor(lua_State* L);
 }

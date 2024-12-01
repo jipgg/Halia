@@ -67,5 +67,17 @@ enum class Namecall_atom {
     blend_mode,
     color,
     copy,
+    join,
+    running,
+    wait,
+    joinable,
+    terminate,
+    detach,
+    read,
+    write,
+    get_line,
+    read_line,
+    write_line,
+    eof,
     _last
 };

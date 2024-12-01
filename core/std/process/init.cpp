@@ -64,14 +64,29 @@ static const luaL_Reg functions[] = {
     {"execute", execute_command},
     {"exists_in_path_environment", exists_in_path_environment},
     {"find_in_path_environment", find_in_path_environment},
+    {"Child", exported::child_process_ctor},
     {nullptr, nullptr}
 };
 
+static void proc_option_field(lua_State* L, const char* name, Process_option value) {
+    create<Process_option>(L, value);
+    lua_setfield(L, -2, name);
+}
+static int push_process_option_constants(lua_State* L) {
+    lua_newtable(L);
+    proc_option_field(L, "silent", Process_option::silent);
+    return 1;
+}
+
 namespace library {
 Builtin_library process{"process", [](lua_State* L) {
-    exported::init_process_callback_meta(L);
+    exported::init_execution_feedback_meta(L);
+    exported::init_child_process_meta(L);
+    exported::init_pid_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, functions);
+    //push_process_option_constants(L);
+    //lua_setfield(L, -2, "Process_option");
     return 1;
 }};
 }

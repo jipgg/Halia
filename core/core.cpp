@@ -88,6 +88,7 @@ std::unordered_map<std::string, int> type_registry{};
 namespace core{
 int bootstrap(Launch_options opts) {
     init(opts);
+    lua_close(main_state);
     return 0;
 }
 void add_library(const Library_entry &entry) {
