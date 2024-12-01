@@ -1,6 +1,6 @@
 #pragma once
 #include <filesystem>
-#include "type_utils.h"
+#include "type_utils.hpp"
 struct lua_State;
 namespace fs = std::filesystem;
 using Directory_entry = fs::directory_entry;

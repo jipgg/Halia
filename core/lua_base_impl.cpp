@@ -5,9 +5,9 @@
 #include <Luau/Common.h>
 #include <Luau/Compiler.h>
 #include <Luau/CodeGen.h>
-#include "Require.h"
-#include "common/common.h"
-#include "lua_base.h"
+#include "Require.hpp"
+#include "common/common.hpp"
+#include "lua_base.hpp"
 namespace fs = std::filesystem;
 struct Global_options {
     int optimizationLevel = 2;

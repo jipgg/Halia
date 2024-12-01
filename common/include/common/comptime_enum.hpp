@@ -6,7 +6,7 @@
 #include <array>
 #include <cassert>
 #include <ranges>
-#include "common.h"
+#include "common.hpp"
 namespace comptime_enum {
 template<class Val, Val v>
 struct Value {

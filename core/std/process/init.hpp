@@ -1,17 +1,17 @@
 #pragma once
-#include <type_utils.h>
+#include <type_utils.hpp>
 #include <lualib.h>
 #include <optional>
 #include <string>
 #include <boost/process/v1/child.hpp>
 using namespace halia;
-struct System_exit_callback{
-    std::optional<std::string> std_out;
-    std::optional<std::string> std_err;
+struct Execution_feedback{
+    std::optional<std::string> output;
+    std::optional<std::string> error;
     int exit_code;
-    bool success() const {return exit_code == 0;}
+    bool failed_before_execution;
 };
-using Child_process = boost::process::child;
+using Child = boost::process::child;
 namespace exported {
 void init_process_callback_meta(lua_State* L);
 void init_child_meta(lua_State* L);

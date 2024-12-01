@@ -1,6 +1,6 @@
-#include "init.h"
+#include "init.hpp"
 #include <lualib.h>
-#include "library.h"
+#include "library.hpp"
 static const luaL_Reg functions[] = {
     {"Vector2", exported::vector2_ctor},
     {"Vector3", exported::vector3_ctor},

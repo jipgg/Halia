@@ -114,13 +114,16 @@ export type math = {
         & ((e11: number?, e12: number?, e13: number?, e21: number?, e22: number?, e23: number?, e31: number?, e32: number?, e33: number?)->Matrix3)
         & Matrix3_named_constructors, 
 }
-declare class System_exit_callback
-    stdout: string?
-    stderr: string?
+declare class Execution_feedback
+    output: string?
+    error: string?
     exit_code: number
+    failed_before_executing: boolean
 end
 export type process = {
-    system: (command: string)->System_exit_callback,
+    execute: (exe: string, ...string)->Execution_feedback,
+    exists_in_path_environment: (what: string)->boolean,
+    find_in_path_environment: (what: string)->string?,
 }
 export type standard_library = {
         filesystem: filesystem,

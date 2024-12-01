@@ -1,12 +1,21 @@
-print("hello world")
 local Path = std.filesystem.Path
 local fs = std.filesystem;
 local Matrix3 = std.math.Matrix3
 local Vector2 = std.math.Vector2
-local status = std.process.system("cmd echo hello world");
-print(status.stdout, status.exit_code)
-print("abc")
+--local success, callback_or_error = pcall(std.process.run, "cmd echo hello world");
+--if success then
+--print(callback_or_error.stdout, callback_or_error.exit_code)
+--print("abc")
+--else print(`error {callback_or_error}`)
+--end
+local feedback = std.process.execute("echo",  "hello world");
+print(std.process.find_in_path_environment("zig"))
+print(feedback);
 print(Vector2(10, 10) + Vector2(10, 20))
+local ex = std.process.execute("cmake", "--version");
+print(std.process.exists_in_path_environment("cmake.exe"));
+print(std.process.exists_in_path_environment("zig"));
+print(ex.error);
 
 local my_path = Path("main.luau");
 print(fs.exists(my_path), tostring(my_path), tostring(my_path:stem()))

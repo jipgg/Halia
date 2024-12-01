@@ -1,9 +1,9 @@
-#include "builtin.h"
-#include "common/Namecall_atom.h"
+#include "builtin.hpp"
+#include "common/Namecall_atom.hpp"
 #include <lualib.h>
-#include "common/common.h"
-#include "type_utils.h"
-#include "common/metamethod.h"
+#include "common/common.hpp"
+#include "type_utils.hpp"
+#include "common/metamethod.hpp"
 using builtin::Event;
 static constexpr auto type = "Event";
 static constexpr auto connection_type = "Event_connection";

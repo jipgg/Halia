@@ -1,8 +1,8 @@
 // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
-#include "Require.h"
+#include "Require.hpp"
 
 
-#include "FileUtils.h"
+#include "FileUtils.hpp"
 #include "Luau/Common.h"
 
 #include <algorithm>

@@ -1,8 +1,8 @@
-#include "init.h"
-#include "common/common.h"
-#include "type_utils.h"
-#include "common/util.h"
-#include "library.h"
+#include "init.hpp"
+#include "common/common.hpp"
+#include "type_utils.hpp"
+#include "common/util.hpp"
+#include "library.hpp"
 using namespace halia;
 
 static fs::copy_options to_copy_options(std::string_view str) {

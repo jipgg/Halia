@@ -1,7 +1,7 @@
-#include "init.h"
-#include "common/metamethod.h"
+#include "init.hpp"
+#include "common/metamethod.hpp"
 #include <lualib.h>
-#include "common/Namecall_atom.h"
+#include "common/Namecall_atom.hpp"
 #include <lualib.h>
 using namespace std::string_literals;
 static constexpr auto type = "Vector3";

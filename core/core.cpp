@@ -1,18 +1,18 @@
-#include "core.h"
-#include "type_utils.h"
+#include "core.hpp"
+#include "type_utils.hpp"
 #include <lua.h>
 #include <lualib.h>
 #include <luaconf.h>
 #include <luacode.h>
 #include <luacodegen.h>
-#include "builtin.h"
+#include "builtin.hpp"
 #include <Luau/Compiler.h>
-#include "common/Namecall_atom.h"
-#include "lua_base.h"
-#include "common/comptime_enum.h"
-#include "common/common.h"
+#include "common/Namecall_atom.hpp"
+#include "lua_base.hpp"
+#include "common/comptime_enum.hpp"
+#include "common/common.hpp"
 #include <stdexcept>
-#include "library.h"
+#include "library.hpp"
 #include <string_view>
 namespace fs = std::filesystem;
 static constexpr auto builtin_name = "std";
@@ -32,24 +32,23 @@ static void register_builtin_library(lua_State* L, Builtin_library& module) {
     module.load(L);
     lua_setfield(L, -2, module.name);
 }
+
 static void execute_script(lua_State* L, const fs::path& script) {
     std::optional<std::string> source = read_file(script);
     if (not source) {
         using namespace std::string_literals;
         printerr("failed to read the file '"s + script.string() + "'");
-    } else {
-        auto identifier = script.filename().string();
-        identifier = "=" + identifier;
-        std::string bytecode = Luau::compile(*source, compile_options());
-        if (luau_load(L, identifier.c_str(), bytecode.data(), bytecode.size(), 0)) {
-            printerr(luaL_checkstring(L, -1));
-        } else {
-            if (lua_pcall(main_state, 0, 0, 0)) {
-                printerr("failed to call", luaL_checkstring(main_state, -1));
-            }
-        }
+        return;
     }
-    
+    auto identifier = script.filename().string();
+    identifier = "=" + identifier;
+    std::string bytecode = Luau::compile(*source, compile_options());
+    if (luau_load(L, identifier.c_str(), bytecode.data(), bytecode.size(), 0)) {
+        printerr(luaL_checkstring(L, -1));
+        return;
+    }
+    const bool expected = lua_pcall(L, 0, 0, 1) == LUA_OK;
+    if (!expected) printerr("Execution error in ", identifier, lua_tostring(L, -1));
 }
 static void init_luau_state(const fs::path& main_entry_point) {
     luaL_openlibs(main_state);

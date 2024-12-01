@@ -1,5 +1,5 @@
 #pragma once
-#include "halia_api.h"
+#include "halia_api.hpp"
 #include <filesystem>
 #include <lualib.h>
 #include <luaconf.h>

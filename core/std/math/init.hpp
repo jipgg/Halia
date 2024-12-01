@@ -1,5 +1,5 @@
 #pragma once
-#include <type_utils.h>
+#include <type_utils.hpp>
 #include <blaze/Blaze.h>
 using namespace halia;
 struct lua_State;

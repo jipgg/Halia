@@ -1,8 +1,8 @@
-#include "init.h"
+#include "init.hpp"
 #include <lualib.h>
-#include "common/Namecall_atom.h"
-#include "type_utils.h"
-#include "common/metamethod.h"
+#include "common/Namecall_atom.hpp"
+#include "type_utils.hpp"
+#include "common/metamethod.hpp"
 static constexpr auto type = "Path";
 using namespace halia;
 
