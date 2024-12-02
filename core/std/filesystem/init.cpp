@@ -154,20 +154,20 @@ static int descendants_of(lua_State* L) {
     return 1;
 }
 static int executable_directory(lua_State* L) {
-    create<Path>(L, util::get_executable_path());
+    create<File_path>(L, util::get_executable_path());
     return 1;
 }
 static int current_working_directory(lua_State* L) {
-    create<Path>(L, fs::current_path());
+    create<File_path>(L, fs::current_path());
     return 1;
 }
 static int canonical(lua_State* L) {
-    create<Path>(L, fs::canonical(*resolve_path_type(L, 1)));
+    create<File_path>(L, fs::canonical(*resolve_path_type(L, 1)));
     return 1;
 }
 static int proximate(lua_State* L) {
     auto base_opt = resolve_path_type(L, 2);
-    create<Path>(L, fs::proximate(*resolve_path_type(L, 1),
+    create<File_path>(L, fs::proximate(*resolve_path_type(L, 1),
         base_opt ? *base_opt : fs::current_path()));
 
     return 1;
@@ -178,7 +178,7 @@ static int create_symlink(lua_State* L) {
 }
 static int relative(lua_State* L) {
     auto base_opt = resolve_path_type(L, 2);
-    create<Path>(L, fs::relative(
+    create<File_path>(L, fs::relative(
                  *resolve_path_type(L, 1),
                  base_opt? *base_opt : fs::current_path()));
     return 1;
@@ -203,7 +203,7 @@ static const luaL_Reg filesystem_table[] = {
     {"canonical", canonical},
     {"proximate", proximate},
     {"create_symlink", create_symlink},
-    {"Path", exported::path_ctor},
+    {"File_path", exported::path_ctor},
     {"relative", relative},
     {"read_file", read_text_file},
     {"write_file", write_text_file},

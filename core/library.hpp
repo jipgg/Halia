@@ -5,4 +5,5 @@ namespace library {
 extern Builtin_library filesystem;
 extern Builtin_library math;
 extern Builtin_library process;
+extern Builtin_library task;
 }

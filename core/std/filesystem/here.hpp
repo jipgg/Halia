@@ -4,7 +4,7 @@
 struct lua_State;
 namespace fs = std::filesystem;
 using Directory_entry = fs::directory_entry;
-using Path = fs::path;
+using File_path = fs::path;
 inline std::optional<std::string> resolve_path_type(lua_State* L, int i) {
     if (halia::is_type<std::filesystem::path>(L, i)) {
         return std::make_optional(halia::check<std::filesystem::path>(L, i).string());

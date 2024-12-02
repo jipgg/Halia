@@ -2,6 +2,7 @@
 #include "library.hpp"
 #include <lualib.h>
 #include <boost/process.hpp>
+#include "core.hpp"
 using namespace std::string_literals;
 namespace bp = boost::process;
 template <class...Ts>
@@ -31,6 +32,25 @@ static Execution_feedback execute(const std::string& exe, Ts&&...args) {
         .exit_code = exit_code,
         .failed_before_execution = false,
     };
+}
+static int create(lua_State* L) {
+    const int top = lua_gettop(L);
+    if (top == 0) {
+        luaL_argerrorL(L, 1, "no executable provided");
+        return 0;
+    }
+    auto exe = bp::search_path(luaL_checkstring(L, 1));
+    if (exe == "") {
+        luaL_argerrorL(L, 1, "couldn't find executable.");
+        return 0;
+    }
+    if (top == 1) {
+        auto result = create_process(exe.string());
+        if (auto* p = std::get_if<Process>(&result)) {
+            create<Process>(L, std::move(*p));
+            return 1;
+        }
+    }
 }
 static int exists_in_path_environment(lua_State* L) {
     auto found = bp::search_path(luaL_checkstring(L, 1));
@@ -62,7 +82,7 @@ static const luaL_Reg functions[] = {
     {"execute", execute_command},
     {"exists_in_path_environment", exists_in_path_environment},
     {"find_in_path_environment", find_in_path_environment},
-    {"Child", exported::child_process_ctor},
+    {"Child_process", exported::child_process_ctor},
     {nullptr, nullptr}
 };
 
@@ -81,8 +101,11 @@ Builtin_library process{"process", [](lua_State* L) {
     exported::init_execution_feedback_meta(L);
     exported::init_child_process_meta(L);
     exported::init_pid_meta(L);
+    exported::init_args_span_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, functions);
+    create<Args_span>(L, halia::core::args_span());
+    lua_setfield(L, -2, "args");
     //push_process_option_constants(L);
     //lua_setfield(L, -2, "Process_option");
     return 1;

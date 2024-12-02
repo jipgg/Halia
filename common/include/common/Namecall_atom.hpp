@@ -79,5 +79,9 @@ enum class Namecall_atom {
     read_line,
     write_line,
     eof,
+    parse,
+    parse_params,
+    each,
+    foreach,
     _last
 };

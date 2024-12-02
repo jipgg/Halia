@@ -6,11 +6,15 @@
 #include <iostream>
 #include <functional>
 #include <filesystem>
+namespace common {
 struct Scope_guard {
-    using Defer_function = std::function<void()>;
-    Defer_function block;
-    ~Scope_guard() {block();};
+    using Defer = std::function<void()>;
+    std::unique_ptr<Defer> defer;
+    Scope_guard(std::function<void()>&& defer): defer(std::make_unique<Defer>(std::forward<Defer>(defer))) {} 
+    Scope_guard(): defer(nullptr) {}
+    ~Scope_guard() {(*defer)();};
 };
+}
 //concepts
 template <class Ty>
 concept Comparable_to_nullptr = std::is_convertible_v<decltype(std::declval<Ty>() != nullptr), bool>;

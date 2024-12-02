@@ -67,5 +67,6 @@ function lib.imap<T, U>(t: {T}, u: {U})
         end
     end
 end
+lib.
 
 return lib

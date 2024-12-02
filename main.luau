@@ -1,8 +1,7 @@
-local Path = std.filesystem.Path
-local fs = std.filesystem;
 local Matrix3 = std.math.Matrix3
 local Vector2 = std.math.Vector2
-local Child = std.process.Child
+local Child_process = std.process.Child_process
+local File_path = std.filesystem.File_path
 local feedback = std.process.execute("echo",  "hello world");
 type Config = {
     runtime: "console" | "desktop",
@@ -14,7 +13,18 @@ type Config = {
 -- else
 --     print(data)
 -- end
-local res = Child("cmd", "echo", "hello world");
+
+--print(std.process.args:at(0), std.process.args:at(1));
+
+type Arg_data = {
+    data: string?,
+    var: string?,
+    v: string?,
+}
+std.task.spawn(function()
+    std.task.wait(10)
+    print("yoo im spawned")
+end)
 
 print(std.process.find_in_path_environment("zig"))
 print(feedback);
@@ -24,8 +34,8 @@ print(std.process.exists_in_path_environment("cmake.exe"));
 print(std.process.exists_in_path_environment("zig"));
 print(ex.error);
 
-local my_path = Path("main.luau");
-print(fs.exists(my_path), tostring(my_path), tostring(my_path:stem()))
+local my_path = File_path("main.luau");
+print(std.filesystem.exists(my_path), tostring(my_path), tostring(my_path:stem()))
 print(std.math.Vector2)
 local b = std.math.Vector2(2, 1)
 local a = std.math.Vector3(0, 1, 2)
