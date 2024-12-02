@@ -33,24 +33,40 @@ static void register_builtin_library(lua_State* L, Builtin_library& module) {
     lua_setfield(L, -2, module.name);
 }
 
-static void execute_script(lua_State* L, const fs::path& script) {
+struct Core_error {
+    enum class Type {
+        runtime,
+        compile,
+        load,
+        file_not_found,
+        comptime_SENTINEL
+    };
+    Type type;
+    std::string message;
+    constexpr int exit_code() {return -static_cast<int>(type) - 1;}
+};
+static std::optional<Core_error> execute_script(lua_State* L, const fs::path& script) {
     std::optional<std::string> source = read_file(script);
+    using namespace std::string_literals;
     if (not source) {
-        using namespace std::string_literals;
-        printerr("failed to read the file '"s + script.string() + "'");
-        return;
+        return Core_error{
+            .type = Core_error::Type::file_not_found,
+            .message = "Unable to read file '" + script.string() + "'",
+        };
     }
     auto identifier = script.filename().string();
     identifier = "=" + identifier;
     std::string bytecode = Luau::compile(*source, compile_options());
     if (luau_load(L, identifier.c_str(), bytecode.data(), bytecode.size(), 0)) {
-        printerr("Build error:", luaL_checkstring(L, -1));
-        return;
+        return Core_error{Core_error::Type::load, "Build error:"s + luaL_checkstring(L, -1)};
     }
     const bool expected = lua_pcall(L, 0, 0, 0) == LUA_OK;
-    if (!expected) printerr("Runtime error:", lua_tostring(L, -1));
+    if (not expected) {
+        return Core_error{Core_error::Type::runtime, luaL_checkstring(L, -1)};
+    } 
+    return std::nullopt;
 }
-static void init_luau_state(const fs::path& main_entry_point) {
+static std::optional<Core_error> init_luau_state(const fs::path& main_entry_point) {
     luaL_openlibs(main_state);
     lua_callbacks(main_state)->useratom = [](const char* raw_name, size_t s) {
         std::string_view name{raw_name, s};
@@ -73,13 +89,17 @@ static void init_luau_state(const fs::path& main_entry_point) {
     register_builtin_library(main_state, library::math);
     register_builtin_library(main_state, library::process);
     lua_pop(main_state, 1);
-    execute_script(main_state, main_entry_point);
+    auto unexpected = execute_script(main_state, main_entry_point);
+    if (unexpected) return std::move(unexpected);
     luaL_sandbox(main_state);
+    return std::nullopt;
 }
-static void init(halia::core::Launch_options opts) {
+static std::optional<Core_error> init(halia::core::Launch_options opts) {
     main_state = luaL_newstate();
     bin_path = std::move(opts.bin_path);
-    init_luau_state(opts.main_entry_point);
+    auto unexpected = init_luau_state(opts.main_entry_point);
+    if (unexpected) return std::move(unexpected);
+    return std::nullopt;
 }
 namespace halia {
 namespace intern {
@@ -88,7 +108,18 @@ std::unordered_map<std::string, int> type_registry{};
 }
 namespace core{
 int bootstrap(Launch_options opts) {
-    init(opts);
+    auto unexpected = init(opts);
+    if (unexpected) {
+        lua_close(main_state);
+        constexpr auto arr = comptime_enum::to_array<Core_error::Type>();
+        const int error_type = static_cast<int>(unexpected->type);
+        for (const auto& v : arr) if (v.index == error_type) {
+            printerr(std::format("Error ({}): {}", v.name, unexpected->message));
+            return unexpected->exit_code();
+        }
+        printerr("Weird error");
+        return unexpected->exit_code();
+    }
     lua_close(main_state);
     return 0;
 }

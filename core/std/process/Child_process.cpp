@@ -1,10 +1,10 @@
-#include "init.hpp"
+#include "here.hpp"
 #include "common/metamethod.hpp"
 #include "common/Namecall_atom.hpp"
 #include "type_utils.hpp"
 #include <boost/process.hpp>
 #include <variant>
-constexpr const char* type = "process_Child";
+constexpr const char* type = "Child_process";
 constexpr std::string_view pid_key = "pid";
 constexpr std::string_view valid_key = "valid";
 constexpr std::string_view exit_code_key = "exit_code";
@@ -28,7 +28,7 @@ static int index(lua_State* L) {
     switch (key[0]) {
         case pid_key[0]:
             if (key == pid_key) {
-                create<Pid>(L, self.id());
+                create<Process_id>(L, self.id());
                 return 1;
             }
         case valid_key[0]:

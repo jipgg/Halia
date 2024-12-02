@@ -13,7 +13,7 @@ struct Execution_feedback{
     bool failed_before_execution;
 };
 using Child_process = boost::process::child;
-using Pid = boost::process::pid_t;
+using Process_id = boost::process::pid_t;
 enum class Process_option {
     silent,
 };

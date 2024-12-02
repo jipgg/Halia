@@ -14,7 +14,7 @@ type Config = {
 -- else
 --     print(data)
 -- end
-local res = Child("aaaaaaaaaaa", "aaaaaaaa");
+local res = Child("cmd", "echo", "hello world");
 
 print(std.process.find_in_path_environment("zig"))
 print(feedback);
