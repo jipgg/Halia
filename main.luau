@@ -7,8 +7,14 @@ local feedback = std.process.execute("echo",  "hello world");
 type Config = {
     runtime: "console" | "desktop",
 }
-local child_proc = Child("powershell", "live-server");
-print(`pid: {child_proc.pid}`)
+
+-- local valid, data = pcall(Child, "aaaaaaaaa", "libe-");
+-- if valid then
+--     print(data.pid)
+-- else
+--     print(data)
+-- end
+local res = Child("aaaaaaaaaaa", "aaaaaaaa");
 
 print(std.process.find_in_path_environment("zig"))
 print(feedback);

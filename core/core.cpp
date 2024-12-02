@@ -44,11 +44,11 @@ static void execute_script(lua_State* L, const fs::path& script) {
     identifier = "=" + identifier;
     std::string bytecode = Luau::compile(*source, compile_options());
     if (luau_load(L, identifier.c_str(), bytecode.data(), bytecode.size(), 0)) {
-        printerr(luaL_checkstring(L, -1));
+        printerr("Build error:", luaL_checkstring(L, -1));
         return;
     }
-    const bool expected = lua_pcall(L, 0, 0, 1) == LUA_OK;
-    if (!expected) printerr("Execution error in ", identifier, lua_tostring(L, -1));
+    const bool expected = lua_pcall(L, 0, 0, 0) == LUA_OK;
+    if (!expected) printerr("Runtime error:", lua_tostring(L, -1));
 }
 static void init_luau_state(const fs::path& main_entry_point) {
     luaL_openlibs(main_state);
@@ -63,6 +63,7 @@ static void init_luau_state(const fs::path& main_entry_point) {
             return 0i16;
         }
     };
+    //lua_callbacks(main_state)->debugprotectederror = [](lua_State*) -> void {};
     lua_register_globals(main_state);
     lua_newtable(main_state);
     lua_setglobal(main_state, builtin_name);
