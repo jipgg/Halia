@@ -20,13 +20,16 @@ type Arg_data = {
     var: string?,
     v: string?,
 }
-std.task.spawn(function()
+std.co_task.spawn(function()
     print("spawn does something")
 end)
-std.task.spawn(function()
-    std.task.wait(4)
-    print("task does something delayed");
-end)
+std.co_task.spawn(function(a: string)
+    std.co_task.wait(4)
+    print("task does something delayed", a);
+end, "AAAAAA")
+std.co_task.delay(20, function(amount: number)
+    print(`this function has been delayed {amount} seconds.`)
+end, 20)
 
 print(std.process.find_in_path_environment("zig"))
 print(feedback);
@@ -42,8 +45,8 @@ print(std.math.Vector2)
 local b = std.math.Vector2(2, 1)
 local a = std.math.Vector3(0, 1, 2)
 local m = Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
-std.task.wait(6)
-local x = std.do_error()
+std.co_task.wait(6)
+--local x = std.do_error()
 local e = Matrix3.from_scale(Vector2(0, 0))
 print(a, b, m, e)
 for i, v in std.math do

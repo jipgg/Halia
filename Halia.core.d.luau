@@ -150,15 +150,17 @@ export type process = {
         & ((pid: Process_id)->Child_process),
     parse_args: (args: {string}) -> unknown,
 }
-export type task = {
+export type co_task = {
     spawn: <Args...>((Args...)->(), Args...) -> (),
     wait: (duration_sec: number)->(),
+    delay: <Args...>(duration_sec: number, (Args...)->(), Args...)->(),
 }
 export type Halia_standard_library = {
         filesystem: filesystem,
         math: math,
         process: process,
-        task: task,
+        co_task: co_task,
+        terminate: (exit_code: number?)->(),
         Event: <Params...>()->Event<Params...>,
 }
 declare std: Halia_standard_library
