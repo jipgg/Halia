@@ -23,71 +23,54 @@ static Steady_clock::duration steady_clock_duration(double in_sec) {
 struct Lua_thread_info {
     lua_State* thread;
     int nargs;
+    int ref;
 };
 [[nodiscard]] static Error_message_or<Lua_thread_info> init_thread(lua_State* L) {
     if (!lua_isfunction(L, 1)) {
         return "requires a function";
     }
-    lua_State* new_thread = lua_newthread(hc::lua_state()); // Create new coroutine
+    lua_State* new_thread = lua_newthread(L);
+    int ref = lua_ref(L, -1);
     lua_pushvalue(L, 1);                      // Push the function to the new thread
     lua_xmove(L, new_thread, 1);              // Move the function to the new thread
 
     int nargs = lua_gettop(L) - 1;            // Get additional arguments
     lua_xmove(L, new_thread, nargs);          // Move arguments to the new thread
-    return Lua_thread_info{.thread = new_thread, .nargs = nargs};
+    lua_pop(L, 1);
+    luaL_sandboxthread(new_thread);
+    return Lua_thread_info{.thread = new_thread, .nargs = nargs, .ref = ref};
 }
 
-static int spawn(lua_State* L) {
+namespace library {
+int co_spawn(lua_State* L) {
     auto result = init_thread(L);
     if (std::string* error_message = std::get_if<std::string>(&result)) {
         luaL_argerrorL(L, 1, error_message->c_str());
         return 0;
     }
-    auto& [new_thread, nargs] = std::get<Lua_thread_info>(result);
+    auto& [new_thread, nargs, ref] = std::get<Lua_thread_info>(result);
     lua_resume(new_thread, hc::lua_state(), nargs);
-    return 0; // Return to main Lua state
-}
-static int delay(lua_State* L) {
-    const double amount = luaL_checknumber(L, 1);
-    lua_remove(L, 1);
-    auto result = init_thread(L);
-    if (std::string* error_message = std::get_if<std::string>(&result)) {
-        luaL_argerrorL(L, 2, error_message->c_str());
-        return 0;
-    }
-    auto& [new_thread, nargs] = std::get<Lua_thread_info>(result);
-    waiting.emplace_back(Waiting_task{
-        .state = new_thread,
-        .nargs = nargs,
-        .duration = steady_clock_duration(amount),
-    });
-    return 0; // Return to main Lua state
-}
-static int wait(lua_State* L) {
-    namespace sc = std::chrono;
-    double duration = luaL_checknumber(L, 1);
-    waiting.emplace_back(Waiting_task{
-        .state = L,
-        .nargs = 0,
-        .duration = sc::duration_cast<Steady_clock::duration>(sc::duration<double>(duration)),
-    });
-    return lua_yield(L, 0); // Yield the coroutine
-}
-
-static const luaL_Reg table[] = {
-    {"spawn", spawn},
-    {"wait", wait},
-    {"delay", delay},
-    {nullptr, nullptr}
-};
-
-namespace library {
-Builtin_library task{"task", [](lua_State* L) -> int {
-    lua_newtable(L);
-    luaL_register(L, nullptr, table);
+    lua_getref(L, ref);
+    lua_unref(L, ref);
     return 1;
-}};
-namespace task_exports {
+}
+int co_wait(lua_State* L) {
+    double duration = luaL_checknumber(L, 1);
+    auto predicate = [&L](Waiting_task& e) {return e.state == L;};
+    auto it = std::find_if(waiting.begin(), waiting.end(), predicate);
+    if (it == waiting.end()) {
+        waiting.emplace_back(Waiting_task{
+            .state = L,
+            .nargs = 0,
+            .duration = steady_clock_duration(duration),
+        });
+    } else {
+        it->duration += steady_clock_duration(duration);
+    }
+    return lua_yield(L, 0);
+}
+}
+namespace co_tasks {
 void add_task(lua_State* thread) {
     waiting.emplace_back(Waiting_task{
         .state = thread,
@@ -122,4 +105,4 @@ Error_message_on_failure schedule_tasks(lua_State* L) {
     return std::nullopt;
 }
 }
-}
+

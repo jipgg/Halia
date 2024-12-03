@@ -72,7 +72,12 @@ static Error_message_or<lua_State*> init_luau_state(const fs::path& main_entry_p
     register_builtin_library(main_state, library::filesystem);
     register_builtin_library(main_state, library::math);
     register_builtin_library(main_state, library::process);
-    register_builtin_library(main_state, library::task);
+    const luaL_Reg free_functions[] = {
+        {"co_wait", library::co_wait},
+        {"co_spawn", library::co_spawn},
+        {nullptr, nullptr}
+    };
+    luaL_register(main_state, nullptr, free_functions);
     lua_pop(main_state, 1);
     luaL_sandbox(main_state);
     Error_message_or<lua_State*> outcome = load_script(main_state, main_entry_point);
@@ -98,7 +103,6 @@ namespace core{
 void emplace_cothread(Cothread&& co) {
 }
 int bootstrap(Launch_options opts) {
-    namespace lte = library::task_exports;
     constexpr int loading_error_code = -1;
     constexpr int runtime_error_code = -2;
     Scope_guard thou_shalt_close([] {
@@ -111,8 +115,8 @@ int bootstrap(Launch_options opts) {
     }
     lua_State* main_thread = std::get<lua_State*>(outcome);
     int main_status = lua_resume(main_thread, main_state, 0);
-    while (main_status == LUA_YIELD or not lte::all_tasks_done()) {
-        if (Error_message_on_failure error_message = lte::schedule_tasks(main_state)) {
+    while (main_status == LUA_YIELD or not co_tasks::all_tasks_done()) {
+        if (Error_message_on_failure error_message = co_tasks::schedule_tasks(main_state)) {
             printerr(std::format("runtime error: {}", *error_message));
             return runtime_error_code;
         }
