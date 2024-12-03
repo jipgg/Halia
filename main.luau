@@ -22,8 +22,11 @@ type Arg_data = {
     v: string?,
 }
 std.task.spawn(function()
-    std.task.wait(10)
-    print("yoo im spawned")
+    print("spawn does something")
+end)
+std.task.spawn(function()
+    std.task.wait(4)
+    print("task does something delayed");
 end)
 
 print(std.process.find_in_path_environment("zig"))
@@ -41,6 +44,7 @@ local b = std.math.Vector2(2, 1)
 local a = std.math.Vector3(0, 1, 2)
 local m = Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
 local e = Matrix3.from_scale(Vector2(0, 0))
+std.task.wait(6)
 print(a, b, m, e)
 for i, v in std.math do
     print(`{i} = {v}`);
