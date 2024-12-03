@@ -15,6 +15,8 @@
 #include "Cothread.hpp"
 #include "library.hpp"
 #include <string_view>
+#include <variant>
+#include <format>
 namespace fs = std::filesystem;
 static constexpr auto builtin_name = "std";
 static lua_State* main_state;
@@ -34,23 +36,10 @@ static void register_builtin_library(lua_State* L, Builtin_library& module) {
     module.load(L);
     lua_setfield(L, -2, module.name);
 }
-
-struct Core_error {
-    enum class Type {
-        runtime,
-        compile,
-        load,
-        file_not_found,
-        comptime_SENTINEL
-    };
-    Type type;
-    std::string message;
-    constexpr int exit_code() {return -static_cast<int>(type) - 1;}
-};
-[[nodiscard]] lua_State* load_script(lua_State* L, const fs::path& script_path) {
+[[nodiscard]] Error_message_or<lua_State*> load_script(lua_State* L, const fs::path& script_path) {
     std::optional<std::string> source = read_file(script_path);
     using namespace std::string_literals;
-    if (not source) return nullptr; 
+    if (not source) return std::format("Couldn't read source '{}'.", script_path.string()); 
     auto identifier = script_path.filename().string();
     identifier = "=" + identifier;
     std::string bytecode = Luau::compile(*source, compile_options());
@@ -59,41 +48,10 @@ struct Core_error {
     if (load_status == LUA_OK) {
         luaL_sandboxthread(main_thread);
         return main_thread;
-    } 
-    return nullptr;
-}
-static std::optional<Core_error> run_script(lua_State* L, const fs::path& script) {
-    std::optional<std::string> source = read_file(script);
-    using namespace std::string_literals;
-    if (not source) {
-        return Core_error{
-            .type = Core_error::Type::file_not_found,
-            .message = "Unable to read file '" + script.string() + "'",
-        };
     }
-    auto identifier = script.filename().string();
-    identifier = "=" + identifier;
-    std::string bytecode = Luau::compile(*source, compile_options());
-    Cothread proc{L};
-    lua_State* TL = proc.state();
-    luaL_sandboxthread(TL);
-    if (luau_load(TL, identifier.c_str(), bytecode.data(), bytecode.size(), 0)) {
-        Core_error err{
-            .type = Core_error::Type::load,
-            .message = "Build error:"s + luaL_checkstring(TL, -1),
-        };
-        return err;
-    }
-    int status = lua_pcall(TL, 0, 0, 0);
-    if (status == LUA_OK) {
-        return std::nullopt;
-    } 
-    return Core_error{
-        .type = Core_error::Type::runtime,
-        .message = luaL_checkstring(TL, -1)
-    };
+    return std::format("failed to load source: {}", bytecode);
 }
-static lua_State* init_luau_state(const fs::path& main_entry_point) {
+static Error_message_or<lua_State*> init_luau_state(const fs::path& main_entry_point) {
     luaL_openlibs(main_state);
     lua_callbacks(main_state)->useratom = [](const char* raw_name, size_t s) {
         std::string_view name{raw_name, s};
@@ -117,12 +75,15 @@ static lua_State* init_luau_state(const fs::path& main_entry_point) {
     register_builtin_library(main_state, library::task);
     lua_pop(main_state, 1);
     luaL_sandbox(main_state);
-    lua_State* main_thread = load_script(main_state, main_entry_point);
-    if (not main_thread) return nullptr;
+    Error_message_or<lua_State*> outcome = load_script(main_state, main_entry_point);
+    if (std::string* error = std::get_if<std::string>(&outcome)) {
+        return *error;
+    }
+    //if (not main_thread) return nullptr;
     print("init_state is ok");
-    return main_thread;
+    return std::get<lua_State*>(outcome);
 }
-static lua_State* init(halia::core::Launch_options opts) {
+static Error_message_or<lua_State*> init(halia::core::Launch_options opts) {
     args = std::move(opts.args);
     main_state = luaL_newstate();
     bin_path = std::move(opts.bin_path);
@@ -138,16 +99,33 @@ void emplace_cothread(Cothread&& co) {
 }
 int bootstrap(Launch_options opts) {
     namespace lte = library::task_exports;
-    lua_State* main_thread = init(opts);
-    if (not main_thread) {
-        printerr("main thread was nullptr");
-        return -1;
+    constexpr int loading_error_code = -1;
+    constexpr int runtime_error_code = -2;
+    Scope_guard thou_shalt_close([] {
+        lua_close(main_state);
+    });
+    Error_message_or<lua_State*> outcome = init(opts);
+    if (std::string* error = std::get_if<std::string>(&outcome)) {
+        printerr(*error);
+        return loading_error_code;
     }
+    lua_State* main_thread = std::get<lua_State*>(outcome);
     int main_status = lua_resume(main_thread, main_state, 0);
-    while (main_status != LUA_OK and not lte::all_tasks_done()) {
-        lte::schedule_tasks(main_state);
+    while (main_status == LUA_YIELD or not lte::all_tasks_done()) {
+        if (Error_message_on_failure error_message = lte::schedule_tasks(main_state)) {
+            printerr(std::format("runtime error: {}", *error_message));
+            return runtime_error_code;
+        }
+        main_status = lua_status(main_thread);
     }
-    lua_close(main_state);
+    if (main_status != LUA_OK) {
+        const char* error_message = lua_tostring(main_thread, -1);
+        error_message = error_message ? error_message : "unknown error";
+
+        printerr(std::format("runtime error: {}.", error_message));
+        lua_pop(main_thread, 1);
+        return runtime_error_code;
+    }
     return 0;
 }
 void add_library(const Library_entry &entry) {

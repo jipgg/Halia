@@ -4,10 +4,8 @@
 #include "common/common.hpp"
 #include <lualib.h>
 #include <algorithm>
-#include <ranges>
-namespace sr = std::ranges;
+#include <thread>
 using Steady_clock = std::chrono::steady_clock;
-using std::chrono::duration_cast;
 struct Waiting_task {
     lua_State* state;
     Steady_clock::time_point started;
@@ -45,12 +43,12 @@ static int spawn(lua_State* L) {
     return 0; // Return to main Lua state
 }
 static int wait(lua_State* L) {
+    namespace sc = std::chrono;
     double duration = luaL_checknumber(L, 1);
     waiting.emplace_back(Waiting_task{
         .state = L,
         .started = Steady_clock::now(),
-        .duration = std::chrono::duration_cast<Steady_clock::duration>(
-            std::chrono::duration<double>(duration)),
+        .duration = sc::duration_cast<Steady_clock::duration>(sc::duration<double>(duration)),
     });
     return lua_yield(L, 0); // Yield the coroutine
 }
@@ -86,7 +84,7 @@ void add_task(lua_State* thread) {
 bool all_tasks_done() {
     return waiting.empty();
 }
-void schedule_tasks(lua_State* L) {
+Error_message_on_failure schedule_tasks(lua_State* L) {
     auto now = Steady_clock::now();
     auto completed = std::vector<Waiting_task*>();
 
@@ -95,22 +93,24 @@ void schedule_tasks(lua_State* L) {
         if (duration >= task.duration) {
             print(duration, task.duration);
             printerr("waited");
-            int status = lua_resume(task.state, L, 0);
+            int status = lua_status(L);
+            status = lua_resume(task.state, L, 0);
             if (status == LUA_OK) {
                 completed.push_back(&task); // Mark completed
             } else if (status != LUA_YIELD) {
-                printerr(lua_tostring(task.state, -1));
-                err = true;
-                return;
+                return lua_tostring(task.state, -1);
                 //luaL_error(L, lua_tostring(task.state, -1)); // Handle errors
             }
         }
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(1ns);
     }
 
     // Clean up completed tasks
     for (Waiting_task* task : completed) {
         waiting.erase(std::remove(waiting.begin(), waiting.end(), *task), waiting.end());
     }
+    return std::nullopt;
 }
 }
 }

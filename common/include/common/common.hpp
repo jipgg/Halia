@@ -6,7 +6,7 @@
 #include <iostream>
 #include <functional>
 #include <filesystem>
-namespace common {
+#include <variant>
 struct Scope_guard {
     using Defer = std::function<void()>;
     std::unique_ptr<Defer> defer;
@@ -14,7 +14,9 @@ struct Scope_guard {
     Scope_guard(): defer(nullptr) {}
     ~Scope_guard() {(*defer)();};
 };
-}
+template <class T>
+using Error_message_or = std::variant<std::string, T>;
+using Error_message_on_failure = std::optional<std::string>;
 //concepts
 template <class Ty>
 concept Comparable_to_nullptr = std::is_convertible_v<decltype(std::declval<Ty>() != nullptr), bool>;
