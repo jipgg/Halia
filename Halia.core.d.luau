@@ -150,7 +150,7 @@ export type process = {
         & ((pid: Process_id)->Child_process),
     parse_args: (args: {string}) -> unknown,
 }
-export type co_task = {
+export type coroutine_task_library = {
     spawn: <Args...>((Args...)->(), Args...) -> (),
     wait: (duration_sec: number)->(),
     delay: <Args...>(duration_sec: number, (Args...)->(), Args...)->(),
@@ -159,7 +159,7 @@ export type Halia_standard_library = {
         filesystem: filesystem,
         math: math,
         process: process,
-        co_task: co_task,
+        task: coroutine_task_library,
         terminate: (exit_code: number?)->(),
         Event: <Params...>()->Event<Params...>,
 }

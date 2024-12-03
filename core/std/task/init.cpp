@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <thread>
 using Steady_clock = std::chrono::steady_clock;
+namespace hc = halia::core;
 struct Waiting_task {
     lua_State* state;
     int nargs = 0;
@@ -27,7 +28,7 @@ struct Lua_thread_info {
     if (!lua_isfunction(L, 1)) {
         return "requires a function";
     }
-    lua_State* new_thread = lua_newthread(halia::core::lua_state()); // Create new coroutine
+    lua_State* new_thread = lua_newthread(hc::lua_state()); // Create new coroutine
     lua_pushvalue(L, 1);                      // Push the function to the new thread
     lua_xmove(L, new_thread, 1);              // Move the function to the new thread
 
@@ -43,7 +44,7 @@ static int spawn(lua_State* L) {
         return 0;
     }
     auto& [new_thread, nargs] = std::get<Lua_thread_info>(result);
-    lua_resume(new_thread, halia::core::lua_state(), nargs);
+    lua_resume(new_thread, hc::lua_state(), nargs);
     return 0; // Return to main Lua state
 }
 static int delay(lua_State* L) {
@@ -67,6 +68,7 @@ static int wait(lua_State* L) {
     double duration = luaL_checknumber(L, 1);
     waiting.emplace_back(Waiting_task{
         .state = L,
+        .nargs = 0,
         .duration = sc::duration_cast<Steady_clock::duration>(sc::duration<double>(duration)),
     });
     return lua_yield(L, 0); // Yield the coroutine
@@ -80,7 +82,7 @@ static const luaL_Reg table[] = {
 };
 
 namespace library {
-Builtin_library task{"co_task", [](lua_State* L) -> int {
+Builtin_library task{"task", [](lua_State* L) -> int {
     lua_newtable(L);
     luaL_register(L, nullptr, table);
     return 1;
@@ -103,22 +105,17 @@ Error_message_on_failure schedule_tasks(lua_State* L) {
     for (Waiting_task& task : waiting) {
         const auto duration = now - task.started;
         if (duration >= task.duration) {
-            print(duration, task.duration);
-            printerr("waited");
-            int status = lua_status(L);
-            status = lua_resume(task.state, L, task.nargs);
+            int status = lua_status(task.state);
+            if (status == LUA_YIELD) status = lua_resume(task.state, L, task.nargs);
             if (status == LUA_OK) {
-                completed.push_back(&task); // Mark completed
+                completed.push_back(&task);
             } else if (status != LUA_YIELD) {
                 return lua_tostring(task.state, -1);
-                //luaL_error(L, lua_tostring(task.state, -1)); // Handle errors
             }
         }
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1ns);
     }
-
-    // Clean up completed tasks
     for (Waiting_task* task : completed) {
         waiting.erase(std::remove(waiting.begin(), waiting.end(), *task), waiting.end());
     }
