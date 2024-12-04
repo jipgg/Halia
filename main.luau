@@ -3,6 +3,13 @@ local Vector2 = std.math.Vector2
 local File_path = std.filesystem.File_path
 local co_spawn, co_wait = std.co_spawn, std.co_wait
 local feedback = std.process.execute("echo",  "hello world");
+--local Console_color = std.io.Console_color
+--std.io.console_color = Console_color.Red
+local e = std.Event() :: Event<number>;
+e:fire(1)
+local disc = e:connect(function(a0: number)  print("ey", a0) end)
+e:fire(2)
+e:disconnect(disc)
 
 co_spawn(function()
     co_wait(15)
@@ -19,7 +26,7 @@ co_spawn(function()
         co_wait(1)
         acc += 1
     end
-    print("finished!!!!!!!!!!!!")
+    print("\033[31mfinished!!!!!!!!!!!!")
 end)
 print(std.process.find_in_path_environment("zig"))
 print(feedback);

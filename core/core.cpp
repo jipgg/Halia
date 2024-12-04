@@ -5,25 +5,29 @@
 #include <luaconf.h>
 #include <luacode.h>
 #include <luacodegen.h>
-#include "builtin.hpp"
 #include <Luau/Compiler.h>
 #include "common/Namecall_atom.hpp"
 #include "lua_base.hpp"
-#include "common/comptime_enum.hpp"
-#include "common/common.hpp"
+#include "co_tasks.hpp"
+#include "common/constext.hpp"
+#include "common.hpp"
+#include "library.hpp"
 #include <stdexcept>
 #include "library.hpp"
 #include <string_view>
 #include <variant>
+#include <functional>
 #include <format>
 namespace fs = std::filesystem;
 static constexpr auto builtin_name = "std";
-static lua_State* main_state;
+static std::unique_ptr<lua_State, std::function<void(lua_State*)>> main_state;
+static lua_State* state_;
+static lua_State* main_script_thread;
 static fs::path bin_path;
 static std::span<std::string_view> args;
-using Unique_event = std::unique_ptr<builtin::Event>; 
+using Unique_event = std::unique_ptr<library::Event>; 
 static void register_event(lua_State* L, Unique_event& ev, const char* fieldname) {
-    ev = std::make_unique<builtin::Event>(L);
+    ev = std::make_unique<library::Event>(L);
     halia::push(L, *ev);
     lua_setfield(L, -2, fieldname);
 }
@@ -35,51 +39,51 @@ static void register_builtin_library(lua_State* L, Builtin_library& module) {
     module.load(L);
     lua_setfield(L, -2, module.name);
 }
-[[nodiscard]] Error_message_or<lua_State*> load_script(lua_State* L, const fs::path& script_path) {
+[[nodiscard]] Error_message_or<lua_State*> load_script(lua_State* L, const fs::path& script_path) noexcept {
     std::optional<std::string> source = read_file(script_path);
     using namespace std::string_literals;
     if (not source) return std::format("Couldn't read source '{}'.", script_path.string()); 
     auto identifier = script_path.filename().string();
     identifier = "=" + identifier;
     std::string bytecode = Luau::compile(*source, compile_options());
-    lua_State* main_thread = lua_newthread(L);
-    const int load_status = luau_load(main_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
+    lua_State* script_thread = lua_newthread(L);
+    const int load_status = luau_load(script_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
     if (load_status == LUA_OK) {
-        luaL_sandboxthread(main_thread);
-        return main_thread;
+        luaL_sandboxthread(script_thread);
+        return script_thread;
     }
     return std::format("failed to load source: {}", bytecode);
 }
-static Error_message_or<lua_State*> init_luau_state(const fs::path& main_entry_point) {
-    luaL_openlibs(main_state);
-    lua_callbacks(main_state)->useratom = [](const char* raw_name, size_t s) {
+static Error_message_or<lua_State*> init_luau_state(const fs::path& main_entry_point) noexcept {
+    luaL_openlibs(state_);
+    lua_callbacks(state_)->useratom = [](const char* raw_name, size_t s) {
         std::string_view name{raw_name, s};
         static constexpr auto count = static_cast<size_t>(Namecall_atom::_last);
         try {
-            auto e = comptime_enum::item<Namecall_atom, count>(name);
-            return static_cast<int16_t>(e.index);
+            auto e = constext::enum_element<Namecall_atom, count>(name);
+            return static_cast<int16_t>(e.value);
         } catch (std::out_of_range& e) {
-            luaL_error(main_state, e.what());
+            luaL_error(state_, e.what());
             return 0i16;
         }
     };
-    lua_register_globals(main_state);
-    lua_newtable(main_state);
-    lua_setglobal(main_state, builtin_name);
-    builtin::register_event_type(main_state);
-    lua_getglobal(main_state, builtin_name);
-    register_builtin_library(main_state, library::filesystem);
-    register_builtin_library(main_state, library::math);
-    register_builtin_library(main_state, library::process);
+    lua_register_globals(state_);
+    lua_newtable(state_);
+    lua_setglobal(state_, builtin_name);
+    lua_getglobal(state_, builtin_name);
+    register_builtin_library(state_, library::filesystem);
+    register_builtin_library(state_, library::math);
+    register_builtin_library(state_, library::process);
     const luaL_Reg free_functions[] = {
         {"co_wait", library::co_wait},
         {"co_spawn", library::co_spawn},
+        {"Event", library::event_ctor},
         {nullptr, nullptr}
     };
-    luaL_register(main_state, nullptr, free_functions);
-    lua_pop(main_state, 1);
-    luaL_sandbox(main_state);
-    Error_message_or<lua_State*> outcome = load_script(main_state, main_entry_point);
+    luaL_register(state_, nullptr, free_functions);
+    lua_pop(state_, 1);
+    luaL_sandbox(state_);
+    Error_message_or<lua_State*> outcome = load_script(state_, main_entry_point);
     if (std::string* error = std::get_if<std::string>(&outcome)) {
         return *error;
     }
@@ -87,56 +91,63 @@ static Error_message_or<lua_State*> init_luau_state(const fs::path& main_entry_p
     print("init_state is ok");
     return std::get<lua_State*>(outcome);
 }
-static Error_message_or<lua_State*> init(halia::core::Launch_options opts) {
-    args = std::move(opts.args);
-    main_state = luaL_newstate();
-    bin_path = std::move(opts.bin_path);
-    return init_luau_state(opts.main_entry_point);
-}
 namespace halia {
 namespace internal {
 int unique_tag_incr{0};
 std::unordered_map<std::string, int> type_registry{};
 }
 namespace core{
-int bootstrap(Launch_options opts) {
-    constexpr int loading_error_code = -1;
-    constexpr int runtime_error_code = -2;
-    Scope_guard thou_shalt_close([] {
-        lua_close(main_state);
+std::optional<std::string> init(const Launch_options& opts) noexcept {
+    args = std::move(opts.args);
+    main_state = std::unique_ptr<lua_State, std::function<void(lua_State*)>>(luaL_newstate(), [](lua_State* L) -> void {
+        printerr("STATE CLOSING");
+        lua_close(L);
     });
-    Error_message_or<lua_State*> outcome = init(opts);
-    if (std::string* error = std::get_if<std::string>(&outcome)) {
-        printerr(*error);
-        return loading_error_code;
+    state_ = main_state.get();
+    bin_path = std::move(opts.bin_path);
+    auto result = init_luau_state(opts.main_entry_point);
+    if (std::string* err = std::get_if<std::string>(&result)) {
+        return *err;
     }
-    lua_State* main_thread = std::get<lua_State*>(outcome);
-    int main_status = lua_resume(main_thread, main_state, 0);
-    while (main_status == LUA_YIELD or not co_tasks::all_tasks_done()) {
-        if (Error_message_on_failure error_message = co_tasks::schedule_tasks(main_state)) {
+    main_script_thread = std::get<lua_State*>(result);
+    return std::nullopt;
+}
+int bootstrap(const Launch_options& opts) {
+    constexpr int loading_error_exit_code = -1;
+    constexpr int runtime_error_exit_code = -2;
+    if (auto error = init(opts)) {
+        printerr(*error);
+        return loading_error_exit_code;
+    }
+    int main_status = lua_resume(main_script_thread, state_, 0);
+    while (main_status == LUA_YIELD or not co_tasks::all_done()) {
+        if (auto error_message = co_tasks::schedule(state_)) {
             printerr(std::format("runtime error: {}", *error_message));
-            return runtime_error_code;
+            return runtime_error_exit_code;
         }
-        main_status = lua_status(main_thread);
+        main_status = lua_status(main_script_thread);
     }
     if (main_status != LUA_OK) {
-        const char* error_message = lua_tostring(main_thread, -1);
+        const char* error_message = lua_tostring(main_script_thread, -1);
         error_message = error_message ? error_message : "unknown error";
 
         printerr(std::format("runtime error: {}.", error_message));
-        lua_pop(main_thread, 1);
-        return runtime_error_code;
+        lua_pop(main_script_thread, 1);
+        return runtime_error_exit_code;
     }
     return 0;
 }
 void add_library(const Library_entry &entry) {
     Builtin_library lib(entry.name, entry.loader);
-    lua_getglobal(main_state, builtin_name);
-    register_builtin_library(main_state, lib);
-    lua_pop(main_state, 1);
+    lua_getglobal(main_state.get(), builtin_name);
+    register_builtin_library(main_state.get(), lib);
+    lua_pop(main_state.get(), 1);
 }
-lua_State* lua_state() noexcept {
-    return main_state;
+State state() noexcept {
+    return state_;
+}
+Co_thread main_thread() noexcept {
+    return main_script_thread;
 }
 std::span<std::string_view> args_span() noexcept {
     return args;

@@ -33,7 +33,7 @@ declare class File_path
 end
 declare class Directory_entry
     function is_directory(self): boolean
-    function is_fifo(self): boolean
+function is_fifo(self): boolean
     function path(self): File_path
     function is_socket(self): boolean
     function is_other(self): boolean
@@ -78,7 +78,7 @@ declare class Vector3
     function __sub(self, a: Vector3): Vector3
     function __unm(self): Vector3
 end
-export type filesystem = {
+export type filesystem_library = {
     create_directory: (where: PathUnion) -> boolean,
     exists: (path: PathUnion) -> boolean,
     is_character_file: (path: PathUnion) -> boolean,
@@ -113,7 +113,7 @@ type Matrix3_named_constructors = typeof(setmetatable({
     from_rotation = function(radians: number): Matrix3 return {} :: any end,
     from_translation = function(translation: Vector2): Matrix3 return {} :: any end,
 }, {__call = function(...): Matrix3 return {} :: any end}))
-export type math = {
+export type math_library = {
     Vector2: (x: number?, y: number?)->Vector2,
     Vector3: (x: number?, y: number?, z: number?)->Vector3,
     Matrix3: ((row1: {number}, row2: {number}, row3: {number})->Matrix3)
@@ -141,7 +141,7 @@ declare class Child_process
     function running(self): boolean
     function terminate(self)
 end
-export type process = {
+export type process_library = {
     args: Args_span,
     execute: (exe: string, ...string)->Execution_feedback,
     exists_in_path_environment: (what: string)->boolean,
@@ -150,13 +150,26 @@ export type process = {
         & ((pid: Process_id)->Child_process),
     parse_args: (args: {string}) -> unknown,
 }
-export type Halia_standard_library = {
-        filesystem: filesystem,
-        math: math,
-        process: process,
+declare class Console_color end
+export type Console_color_enum = {
+    Red: Console_color,
+    Green: Console_color,
+    Blue: Console_color,
+    White: Console_color,
+    Gray: Console_color,
+}
+export type io_library = {
+    Console_color: Console_color_enum,
+    console_color: Console_color,
+}
+export type Halia_core_standard_library = {
+        filesystem: filesystem_library,
+        math: math_library,
+        process: process_library,
+        io: io_library,
         co_spawn: <Args...>((Args...)->(), Args...) -> thread,
         co_wait: (seconds: number)->(),
         terminate: (exit_code: number?)->(),
         Event: <Params...>()->Event<Params...>,
 }
-declare std: Halia_standard_library
+declare std: Halia_core_standard_library

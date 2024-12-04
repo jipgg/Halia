@@ -1,12 +1,13 @@
-#include "builtin.hpp"
 #include "common/Namecall_atom.hpp"
 #include <lualib.h>
-#include "common/common.hpp"
+#include "common.hpp"
 #include "type_utils.hpp"
+#include "library.hpp"
 #include "common/metamethod.hpp"
-using builtin::Event;
+using library::Event;
 static constexpr auto type = "Event";
 static constexpr auto connection_type = "Event_connection";
+static bool already_registered = false;
 
 Event::Event(lua_State* L): L(L), refs() {
 }
@@ -87,7 +88,31 @@ int connection_id_tostring(lua_State* L) {
     return 1;
 }
 
-namespace builtin {
+namespace library {
+int event_ctor(lua_State* L) {
+    if (not already_registered) {
+        if (luaL_newmetatable(L, halia::metatable_name<Event::Connection>())) {
+            lua_pushcfunction(L, connection_id_tostring, "event_connection_id_tostring");
+            lua_setfield(L, -2, metamethod::tostring);
+            lua_pushstring(L, connection_type);
+            lua_setfield(L, -2, metamethod::type);
+        }
+        lua_pop(L, 1);
+        if (luaL_newmetatable(L, halia::metatable_name<Event>())) {
+            const luaL_Reg lib[] = {
+                {metamethod::namecall, namecall},
+                {nullptr, nullptr}
+            };
+            luaL_register(L, nullptr, lib);
+            lua_pushstring(L, type);
+            lua_setfield(L, -2, metamethod::type);
+        }
+        lua_pop(L, 1);
+        already_registered = true;
+    }
+    //lua_pushcfunction(L, ctor, type);
+    return ctor(L);
+}
 void register_event_type(lua_State* L) {
     if (luaL_newmetatable(L, halia::metatable_name<Event::Connection>())) {
         lua_pushcfunction(L, connection_id_tostring, "event_connection_id_tostring");

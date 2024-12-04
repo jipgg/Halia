@@ -6,7 +6,7 @@
 #include <Luau/Compiler.h>
 #include <Luau/CodeGen.h>
 #include "Require.hpp"
-#include "common/common.hpp"
+#include "common.hpp"
 #include "lua_base.hpp"
 namespace fs = std::filesystem;
 struct Global_options {
@@ -14,23 +14,6 @@ struct Global_options {
     int debugLevel = 1;
 } global_opts;
 static bool codegen = true;
-/*
-static const char* userdata_types[] = {
-    tn::rectangle,
-    tn::opaque_texture,
-    tn::opaque_font,
-    tn::matrix3,
-    tn::vector3,
-    tn::vector,
-    tn::color,
-    tn::vertex,
-    tn::vector2,
-    tn::path,
-    tn::directory_entry,
-    tn::texture,
-    nullptr
-};
-*/
 Luau::CompileOptions compile_options() {
     Luau::CompileOptions result = {};
     result.optimizationLevel = global_opts.optimizationLevel;

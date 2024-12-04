@@ -6,61 +6,62 @@
 #include <array>
 #include <cassert>
 #include <ranges>
-#include "common.hpp"
-namespace comptime_enum {
+#include <format>
+#include <iostream>
+namespace constext {
 template<class Val, Val v>
 struct Value {
     static const constexpr auto value_ = v;
     constexpr operator Val() const {return v;}
 };
 template <class Func, std::size_t... Indices>
-constexpr void inline_for(Func fn, std::index_sequence<Indices...>) {
+constexpr void unroll_for(Func fn, std::index_sequence<Indices...>) {
   (fn(Value<std::size_t, Indices>{}), ...);
 }
 template <std::size_t count, typename Func>
-constexpr void inline_for(Func fn) {
-  inline_for(fn, std::make_index_sequence<count>());
+constexpr void unroll_for(Func fn) {
+  unroll_for(fn, std::make_index_sequence<count>());
 }
-#define comptime_COUNT_VA_ARGS(...) comptime_COUNT_VA_ARGS_IMPL(__VA_ARGS__, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, \
+#define constext_COUNT_VA_ARGS(...) constext_COUNT_VA_ARGS_IMPL(__VA_ARGS__, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, \
     49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, \
     21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
-#define comptime_COUNT_VA_ARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
+#define constext_COUNT_VA_ARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
     _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, \
     _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, count, ...) count
-#define comptime_SENTINEL _end
+#define constext_ENUM_SENTINEL_V _end
 template <class Ty>
 concept Enum = std::is_enum_v<Ty>;
 template <Enum Ty>
 consteval std::size_t count() {
-    return static_cast<std::size_t>(Ty::comptime_SENTINEL);
+    return static_cast<std::size_t>(Ty::constext_ENUM_SENTINEL_V);
 }
-#define comptime_SENTINEL_ENUM(Enum_type, ...) enum class Enum_type {__VA_ARGS__, comptime_SENTINEL}
-#define comptime_ENUM(Enum_type, ...) enum class Enum_type {__VA_ARGS__};\
+#define constext_SENTINEL_ENUM(ENUM_T, ...) enum class ENUM_T {__VA_ARGS__, constext_ENUM_SENTINE_V}
+#define constext_ENUM(ENUM_T, ...) enum class ENUM_T {__VA_ARGS__};\
 template <>\
-consteval std::size_t comptime::count<Enum_type>() {\
-    return comptime_COUNT_VA_ARGS(__VA_ARGS__);\
+consteval std::size_t constext::count<Enum_type>() {\
+    return constext_COUNT_VA_ARGS(__VA_ARGS__);\
 }
-template <Enum Ty, Ty LastItem>
+template <Enum Ty, Ty Last_item>
 consteval std::size_t count() {
-    return static_cast<std::size_t>(LastItem) + 1;
+    return static_cast<std::size_t>(Last_item) + 1;
 }
-struct EnumInfo {
+struct Enum_info {
     std::string_view type;
     std::string_view name;
     std::string_view raw;
-    int index;
+    int value;
 };
 template <Enum Ty>
-struct EnumItem {
+struct Enum_element {
     std::string_view name;
-    int index;
-    constexpr Ty to_enum() const {return Ty(index);}
-    constexpr operator Ty() const {return Ty(index);}
+    int value;
+    constexpr Ty to_enum() const {return Ty(value);}
+    constexpr operator Ty() const {return Ty(value);}
 };
 namespace detail {
 #if defined (_MSC_VER)//msvc compiler
 template <Enum Ty, Ty val>
-consteval EnumInfo enum_info() {
+consteval Enum_info enum_info() {
     const std::string_view raw{std::source_location::current().function_name()};
     const std::string enum_t_keyw{"<enum "};
     auto found = raw.find(enum_t_keyw);
@@ -77,12 +78,12 @@ consteval EnumInfo enum_info() {
         .type = enum_t,
         .name = enum_v,
         .raw = raw,
-        .index = int(val),
+        .value = int(val),
     };
 }
 #elif defined(__clang__) || defined(__GNUC__)
 template <Enum Ty, Ty val>
-consteval EnumInfo enum_info() {
+consteval Enum_info enum_info() {
     using sv = std::string_view;
     const sv raw{std::source_location::current().function_name()};
     const sv enum_find{"Ty = "}; 
@@ -98,7 +99,7 @@ consteval EnumInfo enum_info() {
         .type = enum_t,
         .name = enum_v,
         .raw = raw,
-        .index = int(val),
+        .value = int(val),
     };
 }
 #else
@@ -106,33 +107,30 @@ static_assert(false, "platform not supported")
 #endif
 }
 template <Enum Ty, int val>
-consteval EnumInfo info() {
+consteval Enum_info enum_info() {
     return detail::enum_info<Ty, static_cast<Ty>(val)>();
 }
 template <Enum Ty, int val>
-constexpr EnumItem<Ty> item() {
+constexpr Enum_element<Ty> enum_element() {
     constexpr auto v = info<Ty, val>();
-    return EnumItem<Ty>{
+    return Enum_element<Ty>{
         .name = v.name,
-        .index = val,
+        .value = val,
     };
 }
 template <Enum Ty, int size = count<Ty>()> 
-consteval std::array<EnumInfo, size> to_array() {
-    std::array<EnumInfo, size> arr{};
-    inline_for<size>([&arr](auto i) {
-        arr[i] = info<Ty, i>();
+consteval std::array<Enum_info, size> to_array() {
+    std::array<Enum_info, size> arr{};
+    unroll_for<size>([&arr](auto i) {
+        arr[i] = enum_info<Ty, i>();
     });
     return arr;
 }
 template <Enum Ty, int size = count<Ty>()>
-constexpr EnumItem<Ty> item(std::string_view name) {
-    constexpr auto array = to_array<Ty, size>();
-    auto found_it = std::ranges::find_if(array, [&name](const EnumInfo& e) {return e.name == name;});
-    if (found_it == std::ranges::end(array)) {
-        printerr("invalid enum name", name);
-        assert(found_it != std::ranges::end(array));
-    }
-    return {.name = found_it->name, .index = found_it->index};
+constexpr Enum_element<Ty> enum_element(const std::string_view name, const std::source_location& loc = std::source_location::current()) {
+    namespace sr = std::ranges;
+    constexpr std::array<Enum_info, size> array = to_array<Ty, size>();
+    const auto found_it = sr::find_if(array, [&name](const Enum_info& e) {return e.name == name;});
+    return {.name = found_it->name, .value = found_it->value};
 }
 }
