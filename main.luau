@@ -5,10 +5,7 @@ local co_spawn, co_wait = std.co_spawn, std.co_wait
 local feedback = std.process.execute("echo",  "hello world");
 
 co_spawn(function()
-    co_wait(15)-- this throws a luaC_threadbarrier debug break
-    -- probably cause it gets gc'd
-    -- try holding a std::unique_ptr<int, std::function<void(int*)>> of a lua_ref
-    -- to persist ownership in cpp
+    co_wait(15)
     print("spawn does something")
 end)
 co_spawn(function(a: string)

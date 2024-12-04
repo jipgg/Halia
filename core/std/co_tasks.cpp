@@ -7,7 +7,9 @@
 #include <thread>
 using Steady_clock = std::chrono::steady_clock;
 namespace hc = halia::core;
+using Lua_ref_guard = std::unique_ptr<int, std::function<void(int*)>>; 
 struct Waiting_task {
+    Lua_ref_guard guard;
     lua_State* state;
     int nargs = 0;
     Steady_clock::time_point started = Steady_clock::now();
@@ -17,20 +19,28 @@ struct Waiting_task {
     }
 };
 std::vector<Waiting_task> waiting;
+std::unordered_map<lua_State*, Lua_ref_guard> fixed_refs;
 static Steady_clock::duration steady_clock_duration(double in_sec) {
     return std::chrono::duration_cast<Steady_clock::duration>(std::chrono::duration<double>(in_sec));
+}
+Lua_ref_guard lock_ref(lua_State* L, int index = -1) {
+    auto deleter = [L](int* e) -> void {
+        lua_unref(L, *e);
+        delete e;
+    };
+    return Lua_ref_guard{new int(lua_ref(L, index)), deleter};
 }
 struct Lua_thread_info {
     lua_State* thread;
     int nargs;
-    int ref;
+    Lua_ref_guard ref;
 };
-[[nodiscard]] static Error_message_or<Lua_thread_info> init_thread(lua_State* L) {
+[[nodiscard]] static Error_message_or<Lua_thread_info> create_thread(lua_State* L) {
     if (!lua_isfunction(L, 1)) {
         return "requires a function";
     }
     lua_State* new_thread = lua_newthread(L);
-    int ref = lua_ref(L, -1);
+    Lua_ref_guard ref = lock_ref(L, -1);
     lua_pushvalue(L, 1);                      // Push the function to the new thread
     lua_xmove(L, new_thread, 1);              // Move the function to the new thread
 
@@ -38,20 +48,20 @@ struct Lua_thread_info {
     lua_xmove(L, new_thread, nargs);          // Move arguments to the new thread
     lua_pop(L, 1);
     luaL_sandboxthread(new_thread);
-    return Lua_thread_info{.thread = new_thread, .nargs = nargs, .ref = ref};
+    return Lua_thread_info{.thread = new_thread, .nargs = nargs, .ref = std::move(ref)};
 }
 
 namespace library {
 int co_spawn(lua_State* L) {
-    auto result = init_thread(L);
+    auto result = create_thread(L);
     if (std::string* error_message = std::get_if<std::string>(&result)) {
         luaL_argerrorL(L, 1, error_message->c_str());
         return 0;
     }
     auto& [new_thread, nargs, ref] = std::get<Lua_thread_info>(result);
     lua_resume(new_thread, hc::lua_state(), nargs);
-    lua_getref(L, ref);
-    lua_unref(L, ref);
+    lua_getref(L, *ref);
+    fixed_refs.emplace(new_thread, std::move(ref));
     return 1;
 }
 int co_wait(lua_State* L) {
@@ -101,6 +111,7 @@ Error_message_on_failure schedule_tasks(lua_State* L) {
     }
     for (Waiting_task* task : completed) {
         waiting.erase(std::remove(waiting.begin(), waiting.end(), *task), waiting.end());
+        fixed_refs.erase(task->state);
     }
     return std::nullopt;
 }
