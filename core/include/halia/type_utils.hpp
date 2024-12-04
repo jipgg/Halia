@@ -1,5 +1,5 @@
 #pragma once
-#include "halia_api.hpp"
+#include "halia_core_api.hpp"
 #include <typeinfo>
 #include <unordered_map>
 #include <cassert>
@@ -7,9 +7,9 @@
 #include <string>
 
 namespace halia {
-namespace intern {
-extern HALIA_API int unique_tag_incr;
-extern HALIA_API std::unordered_map<std::string, int> type_registry;//should still make this thread safe
+namespace internal {
+extern HALIA_CORE_API int unique_tag_incr;
+extern HALIA_CORE_API std::unordered_map<std::string, int> type_registry;//should still make this thread safe
 }
 template <class Ty>
 int type_tag() {
@@ -17,11 +17,11 @@ int type_tag() {
     static int tag = nulltag;
     if (tag == nulltag) {
         const std::string type_name = typeid(Ty).name();
-        auto found_it = intern::type_registry.find(type_name);
-        if (found_it == intern::type_registry.end()) {
-            intern::type_registry.insert(std::make_pair(type_name, intern::unique_tag_incr++));
+        auto found_it = internal::type_registry.find(type_name);
+        if (found_it == internal::type_registry.end()) {
+            internal::type_registry.emplace(type_name, internal::unique_tag_incr++);
         }
-        tag = intern::type_registry.at(type_name);
+        tag = internal::type_registry.at(type_name);
     }
     return tag;
 }

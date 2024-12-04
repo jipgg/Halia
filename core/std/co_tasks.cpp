@@ -113,6 +113,10 @@ Error_message_on_failure schedule_tasks(lua_State* L) {
         waiting.erase(std::remove(waiting.begin(), waiting.end(), *task), waiting.end());
         fixed_refs.erase(task->state);
     }
+    if (all_tasks_done()) {//scuffed fix
+        printerr("clearing tasks");
+        fixed_refs.clear();
+    }
     return std::nullopt;
 }
 }

@@ -12,7 +12,6 @@
 #include "common/comptime_enum.hpp"
 #include "common/common.hpp"
 #include <stdexcept>
-#include "Cothread.hpp"
 #include "library.hpp"
 #include <string_view>
 #include <variant>
@@ -95,13 +94,11 @@ static Error_message_or<lua_State*> init(halia::core::Launch_options opts) {
     return init_luau_state(opts.main_entry_point);
 }
 namespace halia {
-namespace intern {
+namespace internal {
 int unique_tag_incr{0};
 std::unordered_map<std::string, int> type_registry{};
 }
 namespace core{
-void emplace_cothread(Cothread&& co) {
-}
 int bootstrap(Launch_options opts) {
     constexpr int loading_error_code = -1;
     constexpr int runtime_error_code = -2;
