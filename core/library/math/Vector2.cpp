@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common/metamethod.hpp"
 #include <lualib.h>
 #include "common/Namecall_atom.hpp"
@@ -82,8 +82,7 @@ static int namecall(lua_State *L) {
         return 0;
     }
 }
-namespace exported {
-void init_vector2_meta(lua_State* L) {
+void module::math::init_vector2_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Vector2>())) {
         const luaL_Reg meta [] = {
             {metamethod::index, index},
@@ -103,7 +102,7 @@ void init_vector2_meta(lua_State* L) {
     }
     lua_pop(L, 1);
 }
-int vector2_ctor(lua_State *L) {
+int module::math::vector2_ctor(lua_State *L) {
     if (lua_isnone(L, 1)) {//default constructor
         create_raw<Vector2>(L) = {};
         return 1;
@@ -137,5 +136,4 @@ int vector2_ctor(lua_State *L) {
     }
     luaL_error(L, "invalid initializer arguments");
     return 0;
-}
 }

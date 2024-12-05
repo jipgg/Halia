@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include <lualib.h>
 #include "common/Namecall_atom.hpp"
 #include "type_utils.hpp"
@@ -109,8 +109,7 @@ static const luaL_Reg path_metatable[] = {
     {nullptr, nullptr}
 };
 
-namespace exported {
-void init_path_meta(lua_State* L) {
+void module::filesystem::init_path_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<File_path>())) {
         luaL_register(L, nullptr, path_metatable);
         lua_pushstring(L, type);
@@ -118,8 +117,7 @@ void init_path_meta(lua_State* L) {
     }
     lua_pop(L, 1);
 }
-int path_ctor(lua_State* L) {
+int module::filesystem::path_ctor(lua_State* L) {
     create<File_path>(L, luaL_checkstring(L, 1));
     return 1;
-}
 }

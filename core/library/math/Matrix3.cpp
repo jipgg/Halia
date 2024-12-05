@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common/metamethod.hpp"
 #include <lualib.h>
 #include "common/Namecall_atom.hpp"
@@ -164,8 +164,7 @@ static int namecall(lua_State* L) {
     return 0;
 }
 
-namespace exported {
-void init_matrix3_meta(lua_State* L) {
+void module::math::init_matrix3_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Matrix3>())) {
         const luaL_Reg meta[] = {
             {metamethod::call, call},
@@ -182,7 +181,7 @@ void init_matrix3_meta(lua_State* L) {
     }
     lua_pop(L, 1);
 }
-int matrix3_ctor_table(lua_State* L) {
+int module::math::matrix3_ctor_table(lua_State* L) {
     using namespace std::string_literals;
     const std::string ctor_tname = (type + "_ctor"s);
     if (luaL_newmetatable(L, ctor_tname.c_str())) {
@@ -201,5 +200,4 @@ int matrix3_ctor_table(lua_State* L) {
     luaL_getmetatable(L, ctor_tname.c_str());
     lua_setmetatable(L, -2);
     return 1;
-}
 }

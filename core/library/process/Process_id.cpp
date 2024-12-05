@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common/metamethod.hpp"
 constexpr const char* type = "Process_id";
 
@@ -11,13 +11,11 @@ static const luaL_Reg meta[] = {
     {metamethod::tostring, tostring},
     {nullptr, nullptr}
 };
-namespace exported {
-void init_pid_meta(lua_State* L) {
+void module::process::init_pid_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Process_id>())) {
         luaL_register(L, nullptr, meta);
         lua_pushstring(L, type);
         lua_setfield(L, -2, metamethod::type);
     }
     lua_pop(L, 1);
-}
 }

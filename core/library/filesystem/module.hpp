@@ -13,7 +13,7 @@ inline std::optional<std::string> resolve_path_type(lua_State* L, int i) {
     } else return std::nullopt;
 }
 
-namespace exported {
+namespace module::filesystem {
 void init_path_meta(lua_State* L);
 int path_ctor(lua_State* L);
 void init_directory_entry_meta(lua_State* L);

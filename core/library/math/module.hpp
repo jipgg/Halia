@@ -9,7 +9,7 @@ using Vector3 = blaze::StaticVector<double, 3, blaze::defaultTransposeFlag, blaz
 using Matrix3 = blaze::StaticMatrix<double, 3, 3>;
 using Dynamic_vector = blaze::DynamicVector<double>;
 
-namespace exported {
+namespace module::math {
 void init_vector3_meta(lua_State* L);
 int vector3_ctor(lua_State* L);
 void init_vector2_meta(lua_State* L);

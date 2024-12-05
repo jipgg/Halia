@@ -1,20 +1,18 @@
-#include "here.hpp"
+#include "module.hpp"
 #include <lualib.h>
 #include "library.hpp"
 static const luaL_Reg functions[] = {
-    {"Vector2", exported::vector2_ctor},
-    {"Vector3", exported::vector3_ctor},
+    {"Vector2", module::math::vector2_ctor},
+    {"Vector3", module::math::vector3_ctor},
     {nullptr, nullptr}
 };
-namespace library {
-Builtin_library math{"math", [](lua_State* L) {
-    exported::init_matrix3_meta(L);
-    exported::init_vector2_meta(L);
-    exported::init_vector3_meta(L);
+Builtin_library library::math{"math", [](lua_State* L) {
+    module::math::init_matrix3_meta(L);
+    module::math::init_vector2_meta(L);
+    module::math::init_vector3_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, functions);
-    exported::matrix3_ctor_table(L);
+    module::math::matrix3_ctor_table(L);
     lua_setfield(L, -2, "Matrix3");
     return 1;
 }};
-}

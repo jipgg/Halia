@@ -10,7 +10,6 @@ e:fire(1)
 local disc = e:connect(function(a0: number)  print("ey", a0) end)
 e:fire(2)
 e:disconnect(disc)
-daadad
 
 co_spawn(function()
     co_wait(15)

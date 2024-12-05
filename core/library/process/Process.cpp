@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common/metamethod.hpp"
 #include "common/Namecall_atom.hpp"
 #include "type_utils.hpp"
@@ -97,13 +97,11 @@ static const luaL_Reg meta[] = {
     {metamethod::namecall, namecall},
     {nullptr, nullptr}
 };
-namespace exported {
-void init_process_meta(lua_State* L) {
+void module::process::init_process_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Process>())) {
         luaL_register(L, nullptr, meta);
         lua_pushstring(L, type);
         lua_setfield(L, -2, metamethod::type);
     }
     lua_pop(L, 1);
-}
 }

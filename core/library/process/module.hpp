@@ -51,10 +51,11 @@ using Args_span = std::span<std::string_view>;
 enum class Process_option {
     silent,
 };
-namespace exported {
+namespace module::process {
 void init_execution_feedback_meta(lua_State* L);
 void init_child_process_meta(lua_State* L);
 void init_args_span_meta(lua_State* L);
 void init_pid_meta(lua_State* L);
 int child_process_ctor(lua_State* L);
+void init_process_meta(lua_State* L);
 }

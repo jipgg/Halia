@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common/metamethod.hpp"
 constexpr const char* type = "process_Execution_feedback";
 constexpr std::string_view output_key = "output";
@@ -46,8 +46,7 @@ static int newindex(lua_State* L) {
     return 0;
 }
 
-namespace exported {
-void init_execution_feedback_meta(lua_State* L) {
+void module::process::init_execution_feedback_meta(lua_State* L) {
     if (luaL_newmetatable(L, halia::metatable_name<Execution_feedback>())) {
         const luaL_Reg meta[] = {
             {metamethod::index, index},
@@ -60,5 +59,4 @@ void init_execution_feedback_meta(lua_State* L) {
         lua_setfield(L, -2, metamethod::type);
     }
     lua_pop(L, 1);
-}
 }

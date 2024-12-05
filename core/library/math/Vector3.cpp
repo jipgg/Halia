@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common/metamethod.hpp"
 #include <lualib.h>
 #include "common/Namecall_atom.hpp"
@@ -94,8 +94,7 @@ static int namecall(lua_State *L) {
     }
     return 0;
 }
-namespace exported {
-void init_vector3_meta(lua_State*L) {
+void module::math::init_vector3_meta(lua_State*L) {
     if (luaL_newmetatable(L, metatable_name<Vector3>())) {
         const luaL_Reg meta[] = {
             {metamethod::index, index},
@@ -115,11 +114,10 @@ void init_vector3_meta(lua_State*L) {
     }
     lua_pop(L, 1);
 }
-int vector3_ctor(lua_State *L) {
+int module::math::vector3_ctor(lua_State *L) {
     const double x = luaL_optnumber(L, 1, 0);
     const double y = luaL_optnumber(L, 2, 0);
     const double z = luaL_optnumber(L, 3, 0);
     create_raw<Vector3>(L) = {x, y, z};
     return 1;
-}
 }

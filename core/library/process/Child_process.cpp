@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common/metamethod.hpp"
 #include "common/Namecall_atom.hpp"
 #include "type_utils.hpp"
@@ -100,8 +100,7 @@ static const luaL_Reg meta[] = {
     {metamethod::namecall, namecall},
     {nullptr, nullptr}
 };
-namespace exported {
-void init_child_process_meta(lua_State* L) {
+void module::process::init_child_process_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Child_process>())) {
         luaL_register(L, nullptr, meta);
         lua_pushstring(L, type);
@@ -109,7 +108,7 @@ void init_child_process_meta(lua_State* L) {
     }
     lua_pop(L, 1);
 }
-int child_process_ctor(lua_State* L) {
+int module::process::child_process_ctor(lua_State* L) {
     const std::string exe = luaL_checkstring(L, 1);
     std::string args = luaL_checkstring(L, 2);
     bool silent = false;
@@ -130,5 +129,4 @@ int child_process_ctor(lua_State* L) {
         create<Child_process>(L, exe_path, args);
     }
     return 1;
-}
 }

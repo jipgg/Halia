@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "common.hpp"
 #include "type_utils.hpp"
 #include "common/util.hpp"
@@ -203,19 +203,16 @@ static const luaL_Reg filesystem_table[] = {
     {"canonical", canonical},
     {"proximate", proximate},
     {"create_symlink", create_symlink},
-    {"File_path", exported::path_ctor},
+    {"File_path", module::filesystem::path_ctor},
     {"relative", relative},
     {"read_file", read_text_file},
     {"write_file", write_text_file},
     {nullptr, nullptr}
 };
-namespace library {
-Builtin_library filesystem{"filesystem", [](lua_State* L) {
-    exported::init_directory_entry_meta(L);
-    exported::init_path_meta(L);
+Builtin_library library::filesystem{"filesystem", [](lua_State* L) {
+    module::filesystem::init_directory_entry_meta(L);
+    module::filesystem::init_path_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, filesystem_table);
     return 1;
 }};
-}
-

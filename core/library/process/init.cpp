@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "library.hpp"
 #include <lualib.h>
 #include <boost/process.hpp>
@@ -82,7 +82,7 @@ static const luaL_Reg functions[] = {
     {"execute", execute_command},
     {"exists_in_path_environment", exists_in_path_environment},
     {"find_in_path_environment", find_in_path_environment},
-    {"Child_process", exported::child_process_ctor},
+    {"Child_process", module::process::child_process_ctor},
     {nullptr, nullptr}
 };
 
@@ -96,12 +96,11 @@ static int push_process_option_constants(lua_State* L) {
     return 1;
 }
 
-namespace library {
-Builtin_library process{"process", [](lua_State* L) {
-    exported::init_execution_feedback_meta(L);
-    exported::init_child_process_meta(L);
-    exported::init_pid_meta(L);
-    exported::init_args_span_meta(L);
+Builtin_library library::process{"process", [](lua_State* L) {
+    module::process::init_execution_feedback_meta(L);
+    module::process::init_child_process_meta(L);
+    module::process::init_pid_meta(L);
+    module::process::init_args_span_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, functions);
     create<Args_span>(L, halia::core::args_span());
@@ -110,4 +109,3 @@ Builtin_library process{"process", [](lua_State* L) {
     //lua_setfield(L, -2, "Process_option");
     return 1;
 }};
-}

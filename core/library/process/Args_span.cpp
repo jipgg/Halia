@@ -1,4 +1,4 @@
-#include "here.hpp"
+#include "module.hpp"
 #include "type_utils.hpp"
 #include "common/Namecall_atom.hpp"
 #include "common/metamethod.hpp"
@@ -49,13 +49,11 @@ static const luaL_Reg meta[] = {
     {nullptr, nullptr}
 };
 
-namespace exported {
-void init_args_span_meta(lua_State* L) {
+void module::process::init_args_span_meta(lua_State* L) {
     if (luaL_newmetatable(L, metatable_name<Args_span>())) {
         luaL_register(L, nullptr, meta);
         lua_pushstring(L, type);
         lua_setfield(L, -2, metamethod::type);
     }
     lua_pop(L, 1);
-}
 }
