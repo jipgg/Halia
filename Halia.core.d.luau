@@ -98,7 +98,7 @@ export type filesystem_library = {
     relative: (path: File_path, base: File_path?)->File_path,
     read_file: (path: PathUnion)->string?,
     write_file: (path: PathUnion, data: string)->boolean,
-    File_path: (path: string)->File_path,
+    File_path: ((path: string)->File_path),
 }
 declare class Event_connection
     function __tostring(self): string
@@ -114,8 +114,8 @@ type Matrix3_named_constructors = typeof(setmetatable({
     from_translation = function(translation: Vector2): Matrix3 return {} :: any end,
 }, {__call = function(...): Matrix3 return {} :: any end}))
 export type math_library = {
-    Vector2: (x: number?, y: number?)->Vector2,
-    Vector3: (x: number?, y: number?, z: number?)->Vector3,
+    Vector2: ((x: number?, y: number?)->Vector2),
+    Vector3: ((x: number?, y: number?, z: number?)->Vector3),
     Matrix3: ((row1: {number}, row2: {number}, row3: {number})->Matrix3)
         & ((e11: number?, e12: number?, e13: number?, e21: number?, e22: number?, e23: number?, e31: number?, e32: number?, e33: number?)->Matrix3)
         & Matrix3_named_constructors, 
@@ -170,6 +170,6 @@ export type Halia_core_standard_library = {
         co_spawn: <Args...>((Args...)->(), Args...) -> thread,
         co_wait: (seconds: number)->(),
         terminate: (exit_code: number?)->(),
-        Event: <Params...>()->Event<Params...>,
+        Event: (<Params...>()->Event<Params...>),
 }
 declare std: Halia_core_standard_library

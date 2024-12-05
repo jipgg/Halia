@@ -93,12 +93,11 @@ static std::variant<lua_State*, Error_info> init_luau_state(const fs::path& main
     print("init_state is ok");
     return std::get<lua_State*>(outcome);
 }
-namespace halia {
-namespace internal {
+namespace halia::internal {
 int unique_tag_incr{0};
 std::unordered_map<std::string, int> type_registry{};
 }
-namespace core{
+namespace halia::core{
 std::optional<Error_info> init(const Launch_options& opts) noexcept {
     args = std::move(opts.args);
     main_state = std::unique_ptr<lua_State, std::function<void(lua_State*)>>(luaL_newstate(), [](lua_State* L) -> void {
@@ -152,6 +151,5 @@ Co_thread main_thread() noexcept {
 }
 std::span<std::string_view> args_span() noexcept {
     return args;
-}
 }
 }
