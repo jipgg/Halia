@@ -10,6 +10,7 @@ e:fire(1)
 local disc = e:connect(function(a0: number)  print("ey", a0) end)
 e:fire(2)
 e:disconnect(disc)
+daadad
 
 co_spawn(function()
     co_wait(15)
@@ -43,7 +44,7 @@ local b = std.math.Vector2(2, 1)
 local a = std.math.Vector3(0, 1, 2)
 local m = Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
 co_wait(6)
---local x = std.do_error()
+local x = std.do_error()
 local e = Matrix3.from_scale(Vector2(0, 0))
 print(a, b, m, e)
 for i, v in std.math do

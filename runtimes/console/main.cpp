@@ -25,8 +25,8 @@ int main(int argc, zstring* argv) {
     core::Co_thread thread = core::main_thread();
     int status = lua_resume(thread, state, 0);
     while (status == LUA_YIELD or not co_tasks::all_done()) {
-        if (auto error_message = co_tasks::schedule(state)) {
-            printerr(std::format("runtime error: {}", *error_message));
+        if (auto error = co_tasks::schedule(state)) {
+            printerr(std::format("runtime error: {}", error->formatted()));
             return runtime_error_exit_code;
         }
         status = lua_status(thread);

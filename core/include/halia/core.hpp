@@ -5,6 +5,7 @@
 #include <luaconf.h>
 #include <span>
 #include <optional>
+#include "Error_info.hpp"
 namespace halia {
 namespace core {
     struct HALIA_CORE_API Library_entry {
@@ -19,7 +20,7 @@ namespace core {
     using State = lua_State*;
     using Co_thread = lua_State*;
     [[nodiscard]] HALIA_CORE_API std::span<std::string_view> args_span() noexcept;
-    [[nodiscard("error message on failure")]] HALIA_CORE_API std::optional<std::string> init(const Launch_options& opts = {}) noexcept;
+    [[nodiscard("error message on failure")]] HALIA_CORE_API std::optional<Error_info> init(const Launch_options& opts = {}) noexcept;
     [[nodiscard("exit code")]] HALIA_CORE_API int bootstrap(const Launch_options& opts = {});
     [[nodiscard]] HALIA_CORE_API State state() noexcept;
     HALIA_CORE_API void add_library(const Library_entry& entry);

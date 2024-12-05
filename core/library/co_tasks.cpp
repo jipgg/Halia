@@ -90,7 +90,7 @@ void add_task(lua_State* thread) {
 bool all_done() noexcept {
     return waiting.empty();
 }
-Error_message_on_failure schedule(lua_State* L) {
+std::optional<Error_info> schedule(lua_State* L) {
     auto now = Steady_clock::now();
     auto completed = std::vector<Co_task*>();
 
@@ -102,7 +102,7 @@ Error_message_on_failure schedule(lua_State* L) {
             if (status == LUA_OK) {
                 completed.push_back(&task);
             } else if (status != LUA_YIELD) {
-                return lua_tostring(task.state, -1);
+                return Error_info(lua_tostring(task.state, -1));
             }
         }
     }
