@@ -6,7 +6,7 @@
 #include "common/metamethod.hpp"
 using library::Event;
 static constexpr auto type = "Event";
-static constexpr auto connection_type = "Event_connection";
+static constexpr auto connection_type = "EventConnection";
 static bool already_registered = false;
 
 Event::Event(lua_State* L): L(L), refs() {
@@ -60,7 +60,7 @@ static int namecall(lua_State* L) {
     int atom;
     auto& r = halia::check<Event>(L, 1); 
     lua_namecallatom(L, &atom);
-    using A = Namecall_atom;
+    using A = NamecallAtom;
     switch (static_cast<A>(atom)) {
         case A::connect: {
             if (not lua_isfunction(L, 2)) return 0;

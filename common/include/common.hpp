@@ -7,19 +7,19 @@
 #include <functional>
 #include <filesystem>
 #include <variant>
-struct Scope_guard {
+struct ScopeGuard {
     using Defer = std::function<void()>;
     std::unique_ptr<Defer> defer;
-    Scope_guard(std::function<void()>&& defer): defer(std::make_unique<Defer>(std::forward<Defer>(defer))) {} 
-    Scope_guard(): defer(nullptr) {}
-    ~Scope_guard() {(*defer)();};
+    ScopeGuard(std::function<void()>&& defer): defer(std::make_unique<Defer>(std::forward<Defer>(defer))) {} 
+    ScopeGuard(): defer(nullptr) {}
+    ~ScopeGuard() {(*defer)();};
 };
 template <class T>
-using Error_message_or = std::variant<std::string, T>;
-using Error_message_on_failure = std::optional<std::string>;
+using ErrorMessageOr = std::variant<std::string, T>;
+using ErrorMessageOnFailure = std::optional<std::string>;
 //concepts
 template <class Ty>
-concept Comparable_to_nullptr = std::is_convertible_v<decltype(std::declval<Ty>() != nullptr), bool>;
+concept ComparableToNullptr = std::is_convertible_v<decltype(std::declval<Ty>() != nullptr), bool>;
 //free functions
 #ifdef _WIN32
 void attach_console();

@@ -70,7 +70,7 @@ static int namecall(lua_State *L) {
     int atom;
     lua_namecallatom(L, &atom);
     auto& self = check<Vector3>(L, 1);
-    using A = Namecall_atom;
+    using A = NamecallAtom;
     switch(static_cast<A>(atom)) {
         case A::dot: {
             const double dot = blaze::dot(check<Vector3>(L, 1), check<Vector3>(L, 2));

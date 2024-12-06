@@ -11,7 +11,7 @@ set(common_dir ${CMAKE_SOURCE_DIR}/common)
 project(Halia LANGUAGES CXX C)
 
 find_package(blaze REQUIRED)
-find_package(Boost REQUIRED COMPONENTS process)
+find_package(Boost REQUIRED COMPONENTS process date_time)
 add_subdirectory(luau)
 #common
 file (GLOB_RECURSE common_files ${common_dir}/*.cpp)

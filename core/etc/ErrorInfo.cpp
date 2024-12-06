@@ -4,15 +4,15 @@
 #include <filesystem>
 
 namespace halia {
-Error_info::Error_info(std::string message, std::source_location sl):
+ErrorInfo::ErrorInfo(std::string message, std::source_location sl):
         message_(std::move(message)) {
         traceback_.emplace_back(std::move(sl));
     }
-Error_info& Error_info::propagate(std::source_location sl) {
+ErrorInfo& ErrorInfo::propagate(std::source_location sl) {
         traceback_.emplace_back(sl);
         return *this;
     }
-std::string Error_info::formatted() const {
+std::string ErrorInfo::formatted() const {
         std::string ret =  std::format("Error \"{}\"\n", message_);
         for (const auto& sl : traceback_ | std::views::reverse) {
             const std::string filename = std::filesystem::path(sl.file_name()).filename().string();
@@ -31,9 +31,9 @@ std::string Error_info::formatted() const {
         ret.pop_back();
         return ret;
     }
-std::ostream& operator<<(std::ostream& os, const Error_info& error) {
+std::ostream& operator<<(std::ostream& os, const ErrorInfo& error) {
     return os << error.formatted();
 }
-const std::vector<std::source_location>& Error_info::traceback() const {return traceback_;}
-const std::string& Error_info::message() const {return message_;}
+const std::vector<std::source_location>& ErrorInfo::traceback() const {return traceback_;}
+const std::string& ErrorInfo::message() const {return message_;}
 }

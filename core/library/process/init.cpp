@@ -6,7 +6,7 @@
 using namespace std::string_literals;
 namespace bp = boost::process;
 template <class...Ts>
-static Execution_feedback execute(const std::string& exe, Ts&&...args) {
+static ExecutionFeedback execute(const std::string& exe, Ts&&...args) {
     bp::ipstream out_stream;
     bp::ipstream err_stream;
     bp::v1::filesystem::path executable = bp::search_path(exe);
@@ -26,7 +26,7 @@ static Execution_feedback execute(const std::string& exe, Ts&&...args) {
     while(out_stream and std::getline(out_stream, line)) out += line + '\n';
     std::string err;
     while(err_stream and std::getline(err_stream, line)) err += line + '\n';
-    return Execution_feedback{
+    return ExecutionFeedback{
         .output = out.empty() ? std::nullopt : std::make_optional<std::string>(out),
         .error = err.empty() ? std::nullopt : std::make_optional<std::string>(err),
         .exit_code = exit_code,
@@ -70,12 +70,12 @@ static int execute_command(lua_State* L) {
     if (top == 0) luaL_argerrorL(L, 1, nullptr);
     const std::string exe{luaL_checkstring(L, 1)};
     if (top == 1) {
-        halia::create<Execution_feedback>(L, execute(exe));
+        halia::create<ExecutionFeedback>(L, execute(exe));
         return 1;
     }
     std::string command{luaL_checkstring(L, 2)};
     for (int i{3}; i <= top; ++i) command += " "s + luaL_checkstring(L, i);
-    halia::create<Execution_feedback>(L, execute(exe, command));
+    halia::create<ExecutionFeedback>(L, execute(exe, command));
     return 1;
 }
 static const luaL_Reg functions[] = {
@@ -96,14 +96,14 @@ static int push_process_option_constants(lua_State* L) {
     return 1;
 }
 
-Builtin_library library::process{"process", [](lua_State* L) {
+CoreLibrary library::process{"process", [](lua_State* L) {
     module::process::init_execution_feedback_meta(L);
     module::process::init_child_process_meta(L);
     module::process::init_pid_meta(L);
     module::process::init_args_span_meta(L);
     lua_newtable(L);
     luaL_register(L, nullptr, functions);
-    create<Args_span>(L, halia::core::args_span());
+    create<ArgsSpan>(L, halia::core::args_span());
     lua_setfield(L, -2, "args");
     //push_process_option_constants(L);
     //lua_setfield(L, -2, "Process_option");

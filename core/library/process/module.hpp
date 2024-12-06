@@ -8,14 +8,14 @@
 #define _WIN32_WINNT 0x0601
 #include <boost/process.hpp>
 using namespace halia;
-struct Execution_feedback{
+struct ExecutionFeedback{
     std::optional<std::string> output;
     std::optional<std::string> error;
     int exit_code;
     bool failed_before_execution;
 };
-using Child_process = boost::process::child;
-struct Read_buffer {
+using Child = boost::process::child;
+struct ReadBuffer {
     boost::process::ipstream stream;
     std::optional<std::string> getline() {
         std::string line;
@@ -25,8 +25,8 @@ struct Read_buffer {
 };
 struct Process {
     std::unique_ptr<boost::process::child> child;
-    Read_buffer cout;
-    Read_buffer cerr;
+    ReadBuffer cout;
+    ReadBuffer cerr;
 };
 template <class ...Ts>
 std::variant<Process, std::string> create_process(const std::string& exe, Ts&&...args) {
@@ -46,8 +46,8 @@ std::variant<Process, std::string> create_process(const std::string& exe, Ts&&..
         return std::string(e.what());
     }
 }
-using Process_id = boost::process::pid_t;
-using Args_span = std::span<std::string_view>;
+using ProcessID = boost::process::pid_t;
+using ArgsSpan = std::span<std::string_view>;
 enum class Process_option {
     silent,
 };

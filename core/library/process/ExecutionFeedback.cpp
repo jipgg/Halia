@@ -1,6 +1,6 @@
 #include "module.hpp"
 #include "common/metamethod.hpp"
-constexpr const char* type = "process_Execution_feedback";
+constexpr const char* type = "ExecutionFeedback";
 constexpr std::string_view output_key = "output";
 constexpr std::string_view error_key = "error";
 constexpr std::string_view exit_code_key = "exit_code";
@@ -8,7 +8,7 @@ constexpr std::string_view failed_before_execution_key = "failed_before_executio
 using namespace std::string_view_literals;
 
 static int index(lua_State* L) {
-    const Execution_feedback& self = halia::check<Execution_feedback>(L, 1);
+    const ExecutionFeedback& self = halia::check<ExecutionFeedback>(L, 1);
     const std::string_view key = luaL_checkstring(L, 2);
     switch (key[0]) {
         case output_key[0]:
@@ -32,7 +32,7 @@ static int index(lua_State* L) {
     return 0;
 }
 static int tostring(lua_State* L) {
-    const Execution_feedback& self = halia::check<Execution_feedback>(L, 1);
+    const ExecutionFeedback& self = halia::check<ExecutionFeedback>(L, 1);
     std::string v = std::string(type) + "{\n  .output = " + (self.output ? '\"' + *self.output + '\"' : "nil");
     v += ",\n  .error = " + (self.error ? '\"' + *self.error + '\"' : "nil");
     v += ",\n  .exit_code = " + std::to_string(self.exit_code);
@@ -47,7 +47,7 @@ static int newindex(lua_State* L) {
 }
 
 void module::process::init_execution_feedback_meta(lua_State* L) {
-    if (luaL_newmetatable(L, halia::metatable_name<Execution_feedback>())) {
+    if (luaL_newmetatable(L, halia::metatable_name<ExecutionFeedback>())) {
         const luaL_Reg meta[] = {
             {metamethod::index, index},
             {metamethod::newindex, newindex},

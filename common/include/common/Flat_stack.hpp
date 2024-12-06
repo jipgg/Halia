@@ -2,21 +2,21 @@
 #include <vector>
 namespace common {
 template <class Ty>
-class Flat_stack {
+class FlatStack {
 public:
     using Container = std::vector<Ty>;
     using Iterator = typename Container::iterator;
-    using Const_iterator = typename Container::const_iterator;
-    using Reverse_iterator = typename Container::reverse_iterator;
-    using Const_reverse_iterator = typename Container::const_reverse_iterator;
+    using ConstIterator = typename Container::const_iterator;
+    using ReverseIterator = typename Container::reverse_iterator;
+    using ConstReverseIterator = typename Container::const_reverse_iterator;
     Iterator begin() { return data_.begin(); }
-    Const_iterator begin() const { return data_.begin(); }
+    ConstIterator begin() const { return data_.begin(); }
     Iterator end() { return data_.end(); }
-    Const_iterator end() const { return data_.end(); }
-    Reverse_iterator rbegin() { return data_.rbegin(); }
-    Const_reverse_iterator rbegin() const { return data_.rbegin(); }
-    Reverse_iterator rend() { return data_.rend(); }
-    Const_reverse_iterator rend() const { return data_.rend(); }
+    ConstIterator end() const { return data_.end(); }
+    ReverseIterator rbegin() { return data_.rbegin(); }
+    ConstReverseIterator rbegin() const { return data_.rbegin(); }
+    ReverseIterator rend() { return data_.rend(); }
+    ConstReverseIterator rend() const { return data_.rend(); }
     Ty& at(size_t idx) {return data_.at(idx);}
     const Ty& at(size_t idx) const {return data_.at(idx);}
     Ty& operator[](size_t idx) {return data_[idx];}

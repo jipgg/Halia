@@ -1,4 +1,3 @@
-#define VISUAL_STUDIO_DBG
 #include <common/util.hpp>
 #include <boost/process.hpp>
 #include <span>

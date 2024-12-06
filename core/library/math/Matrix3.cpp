@@ -114,10 +114,10 @@ static int mul(lua_State* L) {
     } else if (is_type<Vector3>(L, 2)) {
         create_raw<Vector3>(L) = self * check<Vector3>(L, 2);
         return 1;
-    } else if (is_type<Dynamic_vector>(L, 2)) {
-        auto& v = check<Dynamic_vector>(L, 2);
+    } else if (is_type<DynamicVector>(L, 2)) {
+        auto& v = check<DynamicVector>(L, 2);
         if (v.size() != 3) return err_invalid_vector_size(L, v.size(), 3);
-        create<Dynamic_vector>(L, self * v);
+        create<DynamicVector>(L, self * v);
         return 1;
     }
     return 0;
@@ -148,7 +148,7 @@ static int namecall(lua_State* L) {
     auto& r = check<Matrix3>(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
-    using A = Namecall_atom;
+    using A = NamecallAtom;
     switch (static_cast<A>(atom)) {
         case A::transpose:
             create_raw<Matrix3>(L) = r.transpose();

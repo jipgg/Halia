@@ -14,6 +14,7 @@
 #include "library.hpp"
 #include <stdexcept>
 #include "library.hpp"
+#include "Error_info.hpp"
 #include <string_view>
 #include <variant>
 #include <functional>
@@ -27,7 +28,7 @@ static lua_State* main_script_thread;
 static fs::path bin_path;
 static std::span<std::string_view> args;
 using Unique_event = std::unique_ptr<library::Event>; 
-using halia::Error_info;
+using halia::ErrorInfo;
 static void register_event(lua_State* L, Unique_event& ev, const char* fieldname) {
     ev = std::make_unique<library::Event>(L);
     halia::push(L, *ev);
@@ -37,14 +38,14 @@ static void register_event(lua_State* L, Unique_event& ev, const char* fieldname
 static fs::path res_path() {
     return bin_path / "resources/luau_library";
 }
-static void register_builtin_library(lua_State* L, Builtin_library& module) {
+static void register_builtin_library(lua_State* L, CoreLibrary& module) {
     module.load(L);
     lua_setfield(L, -2, module.name);
 }
-[[nodiscard]] std::variant<lua_State*, Error_info> load_script(lua_State* L, const fs::path& script_path) noexcept {
+[[nodiscard]] std::variant<lua_State*, ErrorInfo> load_script(lua_State* L, const fs::path& script_path) noexcept {
     std::optional<std::string> source = read_file(script_path);
     using namespace std::string_literals;
-    if (not source) return Error_info(std::format("Couldn't read source '{}'.", script_path.string())); 
+    if (not source) return ErrorInfo(std::format("Couldn't read source '{}'.", script_path.string())); 
     auto identifier = script_path.filename().string();
     identifier = "=" + identifier;
     std::string bytecode = Luau::compile(*source, compile_options());
@@ -54,15 +55,15 @@ static void register_builtin_library(lua_State* L, Builtin_library& module) {
         luaL_sandboxthread(script_thread);
         return script_thread;
     }
-    return Error_info(std::format("failed to load source: {}", bytecode));
+    return ErrorInfo(std::format("failed to load source: {}", bytecode));
 }
-static std::variant<lua_State*, Error_info> init_luau_state(const fs::path& main_entry_point) noexcept {
+static std::variant<lua_State*, ErrorInfo> init_luau_state(const fs::path& main_entry_point) noexcept {
     luaL_openlibs(state_);
     lua_callbacks(state_)->useratom = [](const char* raw_name, size_t s) {
         std::string_view name{raw_name, s};
-        static constexpr auto count = static_cast<size_t>(Namecall_atom::_last);
+        static constexpr auto count = static_cast<size_t>(NamecallAtom::_last);
         try {
-            auto e = constext::enum_element<Namecall_atom, count>(name);
+            auto e = constext::enum_element<NamecallAtom, count>(name);
             return static_cast<int16_t>(e.value);
         } catch (std::out_of_range& e) {
             luaL_error(state_, e.what());
@@ -86,7 +87,7 @@ static std::variant<lua_State*, Error_info> init_luau_state(const fs::path& main
     lua_pop(state_, 1);
     luaL_sandbox(state_);
     auto outcome = load_script(state_, main_entry_point);
-    if (Error_info* error = std::get_if<Error_info>(&outcome)) {
+    if (ErrorInfo* error = std::get_if<ErrorInfo>(&outcome)) {
         return error->propagate();
     }
     //if (not main_thread) return nullptr;
@@ -98,7 +99,7 @@ int unique_tag_incr{0};
 std::unordered_map<std::string, int> type_registry{};
 }
 namespace halia::core{
-std::optional<Error_info> init(const Launch_options& opts) noexcept {
+std::optional<ErrorInfo> init(const LaunchOptions& opts) noexcept {
     args = std::move(opts.args);
     main_state = std::unique_ptr<lua_State, std::function<void(lua_State*)>>(luaL_newstate(), [](lua_State* L) -> void {
         lua_close(L);
@@ -106,13 +107,13 @@ std::optional<Error_info> init(const Launch_options& opts) noexcept {
     state_ = main_state.get();
     bin_path = std::move(opts.bin_path);
     auto result = init_luau_state(opts.main_entry_point);
-    if (Error_info* err = std::get_if<Error_info>(&result)) {
+    if (ErrorInfo* err = std::get_if<ErrorInfo>(&result)) {
         return err->propagate();
     }
     main_script_thread = std::get<lua_State*>(result);
     return std::nullopt;
 }
-int bootstrap(const Launch_options& opts) {
+int bootstrap(const LaunchOptions& opts) {
     constexpr int loading_error_exit_code = -1;
     constexpr int runtime_error_exit_code = -2;
     if (auto error = init(opts)) {
@@ -137,8 +138,8 @@ int bootstrap(const Launch_options& opts) {
     }
     return 0;
 }
-void add_library(const Library_entry &entry) {
-    Builtin_library lib(entry.name, entry.loader);
+void add_library(const LibraryEntry &entry) {
+    CoreLibrary lib(entry.name, entry.loader);
     lua_getglobal(main_state.get(), builtin_name);
     register_builtin_library(main_state.get(), lib);
     lua_pop(main_state.get(), 1);
@@ -146,7 +147,7 @@ void add_library(const Library_entry &entry) {
 State state() noexcept {
     return state_;
 }
-Co_thread main_thread() noexcept {
+CoThread main_thread() noexcept {
     return main_script_thread;
 }
 std::span<std::string_view> args_span() noexcept {

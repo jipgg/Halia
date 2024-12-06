@@ -23,7 +23,7 @@ static int index(lua_State* L) {
     switch (key[0]) {
         case pid_key[0]:
             if (key == pid_key) {
-                create<Process_id>(L, child->id());
+                create<ProcessID>(L, child->id());
                 return 1;
             }
         case valid_key[0]:
@@ -43,10 +43,10 @@ static int index(lua_State* L) {
             }
         case stdout_key[0]:
             if (key == stdout_key) {
-                push<Read_buffer>(L, self.cout);
+                push<ReadBuffer>(L, self.cout);
                 return 1;
             } else if (key == stderr_key) {
-                push<Read_buffer>(L, self.cerr);
+                push<ReadBuffer>(L, self.cerr);
                 return 1;
             }
     }
@@ -66,7 +66,7 @@ static int namecall(lua_State* L) {
     }
     int atom;
     lua_namecallatom(L, &atom);
-    using A = Namecall_atom;
+    using A = NamecallAtom;
     switch (static_cast<A>(atom)) {
         case A::join:
             child->join();

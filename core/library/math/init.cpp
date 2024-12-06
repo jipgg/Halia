@@ -6,7 +6,7 @@ static const luaL_Reg functions[] = {
     {"Vector3", module::math::vector3_ctor},
     {nullptr, nullptr}
 };
-Builtin_library library::math{"math", [](lua_State* L) {
+CoreLibrary library::math{"math", [](lua_State* L) {
     module::math::init_matrix3_meta(L);
     module::math::init_vector2_meta(L);
     module::math::init_vector3_meta(L);

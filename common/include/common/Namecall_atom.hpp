@@ -1,5 +1,5 @@
 #pragma once
-enum class Namecall_atom {
+enum class NamecallAtom {
     cross,
     dot,
     normalized,
@@ -83,5 +83,8 @@ enum class Namecall_atom {
     parse_params,
     each,
     foreach,
+    totable,
+    tobuffer,
+    parse_flags,
     _last
 };

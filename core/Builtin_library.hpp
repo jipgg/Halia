@@ -1,13 +1,13 @@
 #pragma once
 #include <lualib.h>
 constexpr auto module_cache_name = "__builtin_module_cache";
-struct Builtin_library {
+struct CoreLibrary {
     static constexpr int not_initialized = -1;
     inline static int builtin_module_cache_ref{not_initialized};
     const char* const name;
     const lua_CFunction loader;
     bool loaded{false};
-    Builtin_library(const char* name, lua_CFunction loader):
+    CoreLibrary(const char* name, lua_CFunction loader):
         name(name),
         loader(loader),
         loaded(false) {

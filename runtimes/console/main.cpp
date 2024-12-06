@@ -11,7 +11,7 @@ using namespace halia;
 using zstring = char*;
 int main(int argc, zstring* argv) {
     std::vector<std::string_view> args{argv + 1, argv + argc};
-    core::Launch_options opts{
+    core::LaunchOptions opts{
         .main_entry_point = "main.luau",
         .args = args,
     };
@@ -22,7 +22,7 @@ int main(int argc, zstring* argv) {
         return loading_error_exit_code;
     }
     core::State state = core::state();
-    core::Co_thread thread = core::main_thread();
+    core::CoThread thread = core::main_thread();
     int status = lua_resume(thread, state, 0);
     while (status == LUA_YIELD or not co_tasks::all_done()) {
         if (auto error = co_tasks::schedule(state)) {

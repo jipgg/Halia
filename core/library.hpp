@@ -5,10 +5,11 @@
 #include <utility>
 
 namespace library {
-extern Builtin_library filesystem;
-extern Builtin_library math;
-extern Builtin_library process;
-extern Builtin_library io;
+extern CoreLibrary filesystem;
+extern CoreLibrary math;
+extern CoreLibrary process;
+extern CoreLibrary io;
+extern CoreLibrary datetime;
 int co_spawn(lua_State* L);
 int co_wait(lua_State* L);
 struct Event {

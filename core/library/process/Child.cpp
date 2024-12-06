@@ -4,7 +4,7 @@
 #include "type_utils.hpp"
 #include <boost/process.hpp>
 #include <variant>
-constexpr const char* type = "Child_process";
+constexpr const char* type = "ChildProcess";
 constexpr std::string_view pid_key = "pid";
 constexpr std::string_view valid_key = "valid";
 constexpr std::string_view exit_code_key = "exit_code";
@@ -12,23 +12,23 @@ constexpr std::string_view native_exit_code_key = "native_exit_code";
 using namespace std::string_literals;
 namespace bp = boost::process;
 template <class ...Ts>
-static std::variant<Child_process, std::string> execute(const std::string& exe, Ts&&...args) {
+static std::variant<Child, std::string> execute(const std::string& exe, Ts&&...args) {
     bp::v1::filesystem::path executable = bp::search_path(exe);
     if (executable == "") return std::string("executable not found.");
     try {
-        Child_process child = bp::child(executable, args...);
+        Child child = bp::child(executable, args...);
         return child;
     } catch(std::exception& e) {
         return std::string(e.what());
     }
 }
 static int index(lua_State* L) {
-    auto& self = check<Child_process>(L, 1);
+    auto& self = check<Child>(L, 1);
     const std::string_view key = luaL_checkstring(L, 2);
     switch (key[0]) {
         case pid_key[0]:
             if (key == pid_key) {
-                create<Process_id>(L, self.id());
+                create<ProcessID>(L, self.id());
                 return 1;
             }
         case valid_key[0]:
@@ -54,7 +54,7 @@ static int newindex(lua_State* L) {
     return 0;
 }
 static int tostring(lua_State* L) {
-    const auto& self = check<Child_process>(L, 1);
+    const auto& self = check<Child>(L, 1);
     std::string parse = std::string(type) + "{\n";
     parse += "  .pid = \"" + std::to_string(static_cast<size_t>(self.id())) + "\",\n";
     parse += "  .valid = "s + (self.valid() ? "true" : "false") + ",\n";
@@ -65,10 +65,10 @@ static int tostring(lua_State* L) {
     return 1;
 }
 static int namecall(lua_State* L) {
-    auto& self = check<Child_process>(L, 1);
+    auto& self = check<Child>(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
-    using A = Namecall_atom;
+    using A = NamecallAtom;
     switch (static_cast<A>(atom)) {
         case A::join:
             self.join();
@@ -101,7 +101,7 @@ static const luaL_Reg meta[] = {
     {nullptr, nullptr}
 };
 void module::process::init_child_process_meta(lua_State* L) {
-    if (luaL_newmetatable(L, metatable_name<Child_process>())) {
+    if (luaL_newmetatable(L, metatable_name<Child>())) {
         luaL_register(L, nullptr, meta);
         lua_pushstring(L, type);
         lua_setfield(L, -2, metamethod::type);
@@ -124,9 +124,9 @@ int module::process::child_process_ctor(lua_State* L) {
         return 0;
     }
     if (silent) {
-        create<Child_process>(L, exe_path, args, bp::std_out > bp::null);
+        create<Child>(L, exe_path, args, bp::std_out > bp::null);
     } else {
-        create<Child_process>(L, exe_path, args);
+        create<Child>(L, exe_path, args);
     }
     return 1;
 }

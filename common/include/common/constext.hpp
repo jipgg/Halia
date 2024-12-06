@@ -45,14 +45,14 @@ template <Enum Ty, Ty Last_item>
 consteval std::size_t count() {
     return static_cast<std::size_t>(Last_item) + 1;
 }
-struct Enum_info {
+struct EnumInfo {
     std::string_view type;
     std::string_view name;
     std::string_view raw;
     int value;
 };
 template <Enum Ty>
-struct Enum_element {
+struct EnumElement {
     std::string_view name;
     int value;
     constexpr Ty to_enum() const {return Ty(value);}
@@ -61,7 +61,7 @@ struct Enum_element {
 namespace detail {
 #if defined (_MSC_VER)//msvc compiler
 template <Enum Ty, Ty val>
-consteval Enum_info enum_info() {
+consteval EnumInfo enum_info() {
     const std::string_view raw{std::source_location::current().function_name()};
     const std::string enum_t_keyw{"<enum "};
     auto found = raw.find(enum_t_keyw);
@@ -83,7 +83,7 @@ consteval Enum_info enum_info() {
 }
 #elif defined(__clang__) || defined(__GNUC__)
 template <Enum Ty, Ty val>
-consteval Enum_info enum_info() {
+consteval EnumInfo enum_info() {
     using sv = std::string_view;
     const sv raw{std::source_location::current().function_name()};
     const sv enum_find{"Ty = "}; 
@@ -107,30 +107,30 @@ static_assert(false, "platform not supported")
 #endif
 }
 template <Enum Ty, int val>
-consteval Enum_info enum_info() {
+consteval EnumInfo enum_info() {
     return detail::enum_info<Ty, static_cast<Ty>(val)>();
 }
 template <Enum Ty, int val>
-constexpr Enum_element<Ty> enum_element() {
+constexpr EnumElement<Ty> enum_element() {
     constexpr auto v = info<Ty, val>();
-    return Enum_element<Ty>{
+    return EnumElement<Ty>{
         .name = v.name,
         .value = val,
     };
 }
 template <Enum Ty, int size = count<Ty>()> 
-consteval std::array<Enum_info, size> to_array() {
-    std::array<Enum_info, size> arr{};
+consteval std::array<EnumInfo, size> to_array() {
+    std::array<EnumInfo, size> arr{};
     unroll_for<size>([&arr](auto i) {
         arr[i] = enum_info<Ty, i>();
     });
     return arr;
 }
 template <Enum Ty, int size = count<Ty>()>
-constexpr Enum_element<Ty> enum_element(const std::string_view name, const std::source_location& loc = std::source_location::current()) {
+constexpr EnumElement<Ty> enum_element(const std::string_view name, const std::source_location& loc = std::source_location::current()) {
     namespace sr = std::ranges;
-    constexpr std::array<Enum_info, size> array = to_array<Ty, size>();
-    const auto found_it = sr::find_if(array, [&name](const Enum_info& e) {return e.name == name;});
+    constexpr std::array<EnumInfo, size> array = to_array<Ty, size>();
+    const auto found_it = sr::find_if(array, [&name](const EnumInfo& e) {return e.name == name;});
     return {.name = found_it->name, .value = found_it->value};
 }
 }
