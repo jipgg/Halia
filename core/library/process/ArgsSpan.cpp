@@ -1,8 +1,9 @@
 #include "module.hpp"
 #include "type_utils.hpp"
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include "common/metamethod.hpp"
-constexpr const char* type = "Args_span";
+#include "common.hpp"
+constexpr const char* type = "ArgsSpan";
 constexpr std::string_view size_key = "size";
 
 static bool is_param(std::string_view param) {
@@ -24,7 +25,7 @@ static int namecall(lua_State* L) {
             lua_pushlstring(L, self[idx].data(), self[idx].size());
             return 1;
         }
-        case Na::totable: {
+        case Na::to_table: {
             lua_newtable(L);
             int i{1};
             for (const std::string_view& arg : self) {
@@ -63,6 +64,23 @@ static int namecall(lua_State* L) {
                 lua_setfield(L, -2, std::string(arg.substr(1)).c_str());
             }
             return 1;
+        }
+        case Na::for_each: {
+            if (not lua_isfunction(L, 2)) {
+                luaL_argerrorL(L, 2, "not a function");
+                return 0;
+            }
+            const int fn = lua_ref(L, 2);
+            ScopeGuard unref([&fn, &L] {lua_unref(L, fn);});
+            for (std::string_view& v : self) {
+                lua_getref(L, fn);
+                lua_pushlstring(L, v.data(), v.size());
+                if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+                    lua_error(L);
+                    return 0;
+                }
+            }
+            return 0;
         }
         default:
             luaL_errorL(L, "invalid namecall");

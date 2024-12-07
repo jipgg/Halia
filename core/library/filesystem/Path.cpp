@@ -1,6 +1,6 @@
 #include "module.hpp"
 #include <lualib.h>
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include "type_utils.hpp"
 #include "common/metamethod.hpp"
 static constexpr auto type = "Path";

@@ -1,10 +1,10 @@
 #include "module.hpp"
 #include "common/metamethod.hpp"
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include "type_utils.hpp"
 #include <boost/process.hpp>
 #include <variant>
-constexpr const char* type = "ChildProcess";
+constexpr const char* type = "Child";
 constexpr std::string_view pid_key = "pid";
 constexpr std::string_view valid_key = "valid";
 constexpr std::string_view exit_code_key = "exit_code";

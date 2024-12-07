@@ -1,42 +1,48 @@
 export type Span<T> = {T}
+export type ProjectConfiguration = {
+    runtime: 'console' | 'desktop',
+    includes: {string}?,
+}
 declare class ArgsSpan
     size: number
+    for_each: (self: ArgsSpan, (arg: string)->()) -> ()
     function at(self, index: number): string
     function parse_params(self): {[string]: string}
     function parse_flags(self): {[string]: boolean}
-    function totable(self): {string}
+    function to_table(self): {string}
+    function __index(self, index: number): string
 end
 declare function collectgarbage(opt: ("collect" | "count")?)
-export type PathUnion = string | FilePath
+export type PathUnion = string | Path
 export type CopyOptions = "Recursive"|"Copy Symlinks"|
     "Skip Symlinks"|"Skip Existing"|"Update Existing"|
     "Create Symlinks"|"Directories Only"|"Create Hard Links"|
     "Overwrite Existing"
-declare class FilePath
-    function stem(self): FilePath
+declare class Path
+    function stem(self): Path
     function is_empty(self): boolean
-    function file_name(self): FilePath
+    function file_name(self): Path
     function has_stem(self): boolean
-    function root_path(self): FilePath
-    function parent_path(self): FilePath
+    function root_path(self): Path
+    function parent_path(self): Path
     function is_absolute(self): boolean
     function is_relative(self): boolean
-    function extension(self): FilePath
+    function extension(self): Path
     function replace_extension(self, s: string)
-    function relative_path(self): FilePath
+    function relative_path(self): Path
     function compare(self): number
-    function root_name(self): FilePath
-    function root_directory(self): FilePath
+    function root_name(self): Path
+    function root_directory(self): Path
     function has_root_path(self): boolean
     function has_root_name(self): boolean
     function has_root_directory(self): boolean
     function __tostring(self): string
-    function __div(self, other: PathUnion): FilePath
+    function __div(self, other: PathUnion): Path
 end
 declare class DirectoryEntry
     function is_directory(self): boolean
 function is_fifo(self): boolean
-    function path(self): FilePath
+    function path(self): Path
     function is_socket(self): boolean
     function is_other(self): boolean
     function is_symlink(self): boolean
@@ -89,18 +95,18 @@ export type stdfilesystem = {
     remove: (path: PathUnion) -> boolean,
     remove_all: (path: PathUnion) -> number,
     copy: (from: PathUnion, to: PathUnion, opt: CopyOptions?) -> (),
-    absolute: (path: PathUnion) -> FilePath,
+    absolute: (path: PathUnion) -> Path,
     get_children_of: (path: PathUnion) -> {DirectoryEntry},
     get_descendants_of: (path: PathUnion) -> {DirectoryEntry},
-    exe_path: ()->FilePath,
-    current_path: ()->FilePath,
-    canonical: (path: FilePath)->FilePath,
-    proximate: (path: FilePath, base: FilePath?)->FilePath,
-    create_symlink: (to: FilePath, new_symlink: FilePath)->(),
-    relative: (path: FilePath, base: FilePath?)->FilePath,
+    exe_path: ()->Path,
+    current_path: ()->Path,
+    canonical: (path: Path)->Path,
+    proximate: (path: Path, base: Path?)->Path,
+    create_symlink: (to: Path, new_symlink: Path)->(),
+    relative: (path: Path, base: Path?)->Path,
     read_file: (path: PathUnion)->string?,
     write_file: (path: PathUnion, data: string)->boolean,
-    Path: ((path: string)->FilePath),
+    Path: ((path: string)->Path),
 }
 declare class EventConnection
     function __tostring(self): string
@@ -125,7 +131,7 @@ end
 declare class ProcessID
     function __tostring(self): string
 end
-declare class ChildProcess
+declare class Child
     pid: ProcessID
     valid: boolean
     exit_code: number
@@ -137,13 +143,24 @@ declare class ChildProcess
     function running(self): boolean
     function terminate(self)
 end
+export type run_options = {
+    stdout: buffer?,
+    stderr: buffer?,
+    shell: boolean?,
+}
 export type stdprocess = {
     args: ArgsSpan,
+    run: ((command: string)->number)
+        & ((command: string, capture: 'null')->number)
+        & ((command: string, capture: 'stdout')->(number, string))
+        & ((command: string, capture: 'stderr')->(number, string))
+        & ((command: string, capture: 'stdout | stderr')->(number, string, string))
+        & ((command: string, capture: 'stdout & stderr')->(number, string)),
     execute: (exe: string, ...string)->ExecutionFeedback,
     exists_in_path_environment: (what: string)->boolean,
     find_in_path_environment: (what: string)->string?,
-    Child: ((exe: string, ...string)->ChildProcess)
-        & ((pid: ProcessID)->ChildProcess),
+    Child: ((exe: string, ...string)->Child)
+        & ((pid: ProcessID)->Child),
     parse_args: (args: {string}) -> unknown,
 }
 export type ConsoleColor = {
@@ -170,11 +187,16 @@ export type stdio = {
 export type stddatetime = {
     Date: (year: number, month: number, day: number) -> (),
 }
+export type stdtesting = {
+    expect: <T>(b: boolean) -> T,
+    test: (test_block: ()->()) -> (),
+}
 export type stdhalia = {
         filesystem: stdfilesystem,
         math: stdmath,
         datetime: stddatetime,
         process: stdprocess,
+        testing: stdtesting,
         io: stdio,
         co_spawn: <Args...>((Args...)->(), Args...) -> thread,
         co_wait: (seconds: number)->(),

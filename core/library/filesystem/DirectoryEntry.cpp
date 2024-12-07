@@ -1,6 +1,6 @@
 #include "module.hpp"
 #include <lualib.h>
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include "common/metamethod.hpp"
 constexpr auto type = "DirectoryEntry";
 using namespace halia;

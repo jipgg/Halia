@@ -1,0 +1,8 @@
+print("HELLO I AM ABC")
+std.co_wait(4)
+std.co_spawn(function(message: string)
+    std.co_wait(15)
+    error(message)
+end, 'fuck you')
+std.co_wait(10)
+print("BYE I AM ABC")

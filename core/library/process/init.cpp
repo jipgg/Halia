@@ -5,6 +5,58 @@
 #include "core.hpp"
 using namespace std::string_literals;
 namespace bp = boost::process;
+static std::string ipstream_to_string(bp::ipstream& ipstream) {
+    std::string string;
+    std::string line;
+    while (std::getline(ipstream, line)) string += line + '\n';
+    return string;
+}
+static int run(lua_State* L) {
+    constexpr std::string_view capture_stdout = "stdout";
+    constexpr std::string_view capture_stderr = "stderr";
+    constexpr std::string_view capture_stdout_stderr = "stdout | stderr";
+    constexpr std::string_view capture_stdout_stderr_merged = "stdout & stderr";
+    constexpr std::string_view capture_null = "null";
+    if (not lua_isstring(L, 2)) {
+        const int exit_code = bp::system(luaL_checkstring(L, 1));
+        lua_pushinteger(L, exit_code);
+        return 1;
+    }
+    const std::string_view capture = luaL_checkstring(L, 2);
+    if (capture == capture_stdout) {
+        bp::ipstream out;
+        const int exit_code = bp::system(luaL_checkstring(L, 1), bp::std_out > out, bp::std_err > bp::null);
+        lua_pushinteger(L, exit_code);
+        lua_pushstring(L, ipstream_to_string(out).c_str());
+        return 2;
+    } else if (capture == capture_stderr) {
+        bp::ipstream err;
+        const int exit_code = bp::system(luaL_checkstring(L, 1), bp::std_out.null(), bp::std_err > err);
+        lua_pushinteger(L, exit_code);
+        lua_pushstring(L, ipstream_to_string(err).c_str());
+        return 2;
+    } else if (capture == capture_stdout_stderr) {
+        bp::ipstream out;
+        bp::ipstream err;
+        const int exit_code = bp::system(luaL_checkstring(L, 1), bp::std_out > out, bp::std_err > err);
+        lua_pushinteger(L, exit_code);
+        lua_pushstring(L, ipstream_to_string(out).c_str());
+        lua_pushstring(L, ipstream_to_string(err).c_str());
+        return 3;
+    } else if (capture == capture_null) {
+        const int exit_code = bp::system(luaL_checkstring(L, 1), (bp::std_out & bp::std_err) > bp::null);
+        lua_pushinteger(L, exit_code);
+        return 1;
+    } else if (capture == capture_stdout_stderr_merged) {
+        bp::ipstream merged;
+        const int exit_code = bp::system(luaL_checkstring(L, 1), (bp::std_out & bp::std_err) > merged);
+        lua_pushinteger(L, exit_code);
+        lua_pushstring(L, ipstream_to_string(merged).c_str());
+        return 2;
+    }
+    luaL_argerrorL(L, 2, "invalid capture option");
+    return 0;
+}
 template <class...Ts>
 static ExecutionFeedback execute(const std::string& exe, Ts&&...args) {
     bp::ipstream out_stream;
@@ -21,6 +73,7 @@ static ExecutionFeedback execute(const std::string& exe, Ts&&...args) {
             .failed_before_execution = true,
         };
     }
+
     std::string line;
     std::string out;
     while(out_stream and std::getline(out_stream, line)) out += line + '\n';
@@ -83,6 +136,7 @@ static const luaL_Reg functions[] = {
     {"exists_in_path_environment", exists_in_path_environment},
     {"find_in_path_environment", find_in_path_environment},
     {"Child_process", module::process::child_process_ctor},
+    {"run", run},
     {nullptr, nullptr}
 };
 

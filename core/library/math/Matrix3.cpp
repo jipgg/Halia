@@ -1,7 +1,7 @@
 #include "module.hpp"
 #include "common/metamethod.hpp"
 #include <lualib.h>
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include <sstream>
 static constexpr auto type = "Matrix3";
 using namespace std::string_literals;

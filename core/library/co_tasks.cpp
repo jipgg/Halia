@@ -1,11 +1,13 @@
 #include "core.hpp"
 #include <chrono>
 #include "common.hpp"
+#include <variant>
 #include "co_tasks.hpp"
 #include <lualib.h>
 #include <algorithm>
 using SteadyClock = std::chrono::steady_clock;
 namespace hc = halia::core;
+using halia::ErrorInfo;
 using LuaRefGuard = std::unique_ptr<int, std::function<void(int*)>>; 
 struct CoTask {
     LuaRefGuard guard;
@@ -34,9 +36,9 @@ struct LuaThreadInfo {
     int nargs;
     LuaRefGuard ref;
 };
-[[nodiscard]] static ErrorMessageOr<LuaThreadInfo> create_thread(lua_State* L) {
+[[nodiscard]] static std::variant<LuaThreadInfo, halia::ErrorInfo> create_thread(lua_State* L) {
     if (!lua_isfunction(L, 1)) {
-        return "requires a function";
+        return halia::ErrorInfo("requires a function");
     }
     lua_State* new_thread = lua_newthread(L);
     LuaRefGuard ref = lock_ref(L, -1);
@@ -53,8 +55,8 @@ struct LuaThreadInfo {
 namespace library {
 int co_spawn(lua_State* L) {
     auto result = create_thread(L);
-    if (std::string* error_message = std::get_if<std::string>(&result)) {
-        luaL_argerrorL(L, 1, error_message->c_str());
+    if (auto* error_info = std::get_if<ErrorInfo>(&result)) {
+        luaL_argerrorL(L, 1, error_info->formatted().c_str());
         return 0;
     }
     auto& [new_thread, nargs, ref] = std::get<LuaThreadInfo>(result);
@@ -80,8 +82,10 @@ int co_wait(lua_State* L) {
 }
 }
 namespace halia::co_tasks {
-void add_task(lua_State* thread) {
+void add_task(lua_State* thread, int index) {
+    LuaRefGuard guard{lock_ref(thread, -1)};
     waiting.emplace_back(CoTask{
+        .guard = std::move(guard),
         .state = thread,
         .started = SteadyClock::now(),
         .duration = SteadyClock::duration::zero(),

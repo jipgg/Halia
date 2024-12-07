@@ -1,6 +1,8 @@
 #include <halia/core.hpp>
 #include <halia/co_tasks.hpp>
 #include "common.hpp"
+#include <halia/ProjectConfiguration.hpp>
+#include <Luau/Compiler.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -11,32 +13,34 @@ using namespace halia;
 using zstring = char*;
 int main(int argc, zstring* argv) {
     std::vector<std::string_view> args{argv + 1, argv + argc};
-    core::LaunchOptions opts{
-        .main_entry_point = "main.luau",
-        .args = args,
-    };
     constexpr int loading_error_exit_code = -1;
     constexpr int runtime_error_exit_code = -2;
+    auto result = parse_project_configuration_file("./tests/tests.project.luau");
+    if (ErrorInfo* error = std::get_if<ErrorInfo>(&result)) {
+        printerr(*error);
+        return loading_error_exit_code;
+    }
+    core::LaunchOptions opts{
+        .scripts = std::get<ProjectConfiguration>(result).script_paths,
+        .args = args,
+    };
+    print(opts.scripts.size(), "size");
     if (auto error = init(opts)) {
         printerr(*error);
         return loading_error_exit_code;
     }
-    core::State state = core::state();
-    core::CoThread thread = core::main_thread();
-    int status = lua_resume(thread, state, 0);
-    while (status == LUA_YIELD or not co_tasks::all_done()) {
-        if (auto error = co_tasks::schedule(state)) {
-            printerr(std::format("runtime error: {}", error->formatted()));
-            return runtime_error_exit_code;
+    auto initial = core::spawn_scripts(std::span(opts.scripts));
+    bool error_occurred = bool(initial);
+    std::string error_message = initial ? initial->formatted() : "";
+    while (not co_tasks::all_done() and not error_occurred) {
+        auto err = co_tasks::schedule(core::state());
+        if (err) {
+            error_occurred = true;
+            error_message = err->formatted();
         }
-        status = lua_status(thread);
     }
-    if (status != LUA_OK) {
-        const char* error_message = lua_tostring(thread, -1);
-        error_message = error_message ? error_message : "unknown error";
-
-        printerr(std::format("runtime error: {}.", error_message));
-        lua_pop(thread, 1);
+    if (error_occurred) {
+        printerr(error_message);
         return runtime_error_exit_code;
     }
     return 0;

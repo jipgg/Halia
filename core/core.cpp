@@ -6,7 +6,7 @@
 #include <luacode.h>
 #include <luacodegen.h>
 #include <Luau/Compiler.h>
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include "lua_base.hpp"
 #include "co_tasks.hpp"
 #include "common/constext.hpp"
@@ -14,7 +14,7 @@
 #include "library.hpp"
 #include <stdexcept>
 #include "library.hpp"
-#include "Error_info.hpp"
+#include "ErrorInfo.hpp"
 #include <string_view>
 #include <variant>
 #include <functional>
@@ -57,7 +57,16 @@ static void register_builtin_library(lua_State* L, CoreLibrary& module) {
     }
     return ErrorInfo(std::format("failed to load source: {}", bytecode));
 }
-static std::variant<lua_State*, ErrorInfo> init_luau_state(const fs::path& main_entry_point) noexcept {
+std::optional<ErrorInfo> spawn_script(lua_State* L, const fs::path& script_path) noexcept {
+    auto ret = load_script(L, script_path);
+    if (ErrorInfo* err = std::get_if<ErrorInfo>(&ret)) {
+        return err->propagate();
+    }
+    lua_State* co = std::get<lua_State*>(ret);
+    lua_resume(co, L, 0);
+    return std::nullopt;
+} 
+static std::optional<ErrorInfo> init_luau_state() noexcept {
     luaL_openlibs(state_);
     lua_callbacks(state_)->useratom = [](const char* raw_name, size_t s) {
         std::string_view name{raw_name, s};
@@ -86,13 +95,7 @@ static std::variant<lua_State*, ErrorInfo> init_luau_state(const fs::path& main_
     luaL_register(state_, nullptr, free_functions);
     lua_pop(state_, 1);
     luaL_sandbox(state_);
-    auto outcome = load_script(state_, main_entry_point);
-    if (ErrorInfo* error = std::get_if<ErrorInfo>(&outcome)) {
-        return error->propagate();
-    }
-    //if (not main_thread) return nullptr;
-    print("init_state is ok");
-    return std::get<lua_State*>(outcome);
+    return std::nullopt;
 }
 namespace halia::internal {
 int unique_tag_incr{0};
@@ -106,11 +109,22 @@ std::optional<ErrorInfo> init(const LaunchOptions& opts) noexcept {
     });
     state_ = main_state.get();
     bin_path = std::move(opts.bin_path);
-    auto result = init_luau_state(opts.main_entry_point);
-    if (ErrorInfo* err = std::get_if<ErrorInfo>(&result)) {
-        return err->propagate();
+    auto result = init_luau_state();
+    if (result) return result->propagate();
+    return std::nullopt;
+}
+std::optional<ErrorInfo> spawn_scripts(std::span<const std::filesystem::path> scripts) {
+    constexpr int loading_error_exit_code = -1;
+    constexpr int runtime_error_exit_code = -2;
+    for (const auto& script : scripts) {
+        auto err = spawn_script(state_, script);
+        if (err) return err->propagate(); 
     }
-    main_script_thread = std::get<lua_State*>(result);
+    while(not co_tasks::all_done()) {
+        if (auto error = co_tasks::schedule(state_)) {
+            return error->propagate();
+        }
+    }
     return std::nullopt;
 }
 int bootstrap(const LaunchOptions& opts) {
@@ -120,21 +134,11 @@ int bootstrap(const LaunchOptions& opts) {
         printerr(*error);
         return loading_error_exit_code;
     }
-    int main_status = lua_resume(main_script_thread, state_, 0);
-    while (main_status == LUA_YIELD or not co_tasks::all_done()) {
+    while (not co_tasks::all_done()) {
         if (auto error = co_tasks::schedule(state_)) {
             printerr(std::format("runtime error: {}", error->formatted()));
             return runtime_error_exit_code;
         }
-        main_status = lua_status(main_script_thread);
-    }
-    if (main_status != LUA_OK) {
-        const char* error_message = lua_tostring(main_script_thread, -1);
-        error_message = error_message ? error_message : "unknown error";
-
-        printerr(std::format("runtime error: {}.", error_message));
-        lua_pop(main_script_thread, 1);
-        return runtime_error_exit_code;
     }
     return 0;
 }

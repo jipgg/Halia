@@ -1,4 +1,4 @@
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include <lualib.h>
 #include "common.hpp"
 #include "type_utils.hpp"

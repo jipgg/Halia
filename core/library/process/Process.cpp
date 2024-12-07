@@ -1,6 +1,6 @@
 #include "module.hpp"
 #include "common/metamethod.hpp"
-#include "common/Namecall_atom.hpp"
+#include "common/NamecallAtom.hpp"
 #include "type_utils.hpp"
 #include <boost/process.hpp>
 constexpr const char* type = "Process";

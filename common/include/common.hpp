@@ -6,7 +6,6 @@
 #include <iostream>
 #include <functional>
 #include <filesystem>
-#include <variant>
 struct ScopeGuard {
     using Defer = std::function<void()>;
     std::unique_ptr<Defer> defer;
@@ -14,9 +13,6 @@ struct ScopeGuard {
     ScopeGuard(): defer(nullptr) {}
     ~ScopeGuard() {(*defer)();};
 };
-template <class T>
-using ErrorMessageOr = std::variant<std::string, T>;
-using ErrorMessageOnFailure = std::optional<std::string>;
 //concepts
 template <class Ty>
 concept ComparableToNullptr = std::is_convertible_v<decltype(std::declval<Ty>() != nullptr), bool>;

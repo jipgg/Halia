@@ -86,5 +86,9 @@ enum class NamecallAtom {
     totable,
     tobuffer,
     parse_flags,
+    for_each,
+    to_table,
+    to_buffer,
+    map,
     _last
 };
