@@ -16,5 +16,5 @@ print('printing flags')
 for i, v in args:parse_flags() do
     print(`{i} = {v}`)
 end
-local exit_code = std.process.run('cmake --version', 'stdout | stderr')
+local exit_code, out, err = std.process.run('cmake --version', 'stdout | stderr')
 print(`exit code {exit_code}`)

@@ -35,7 +35,6 @@ using halia::ErrorInfo;
     const size_t old_size = to.size();
     if (not fs::exists(path)) return ErrorInfo{std::format("path does not exist '{}'", path.string())};
     if (fs::is_regular_file(path)) {
-        printerr(path.extension());
         to.emplace_back(path);
         return std::nullopt;
     }
@@ -43,7 +42,6 @@ using halia::ErrorInfo;
         bool emplaced_once = false;
         for (auto& entry : fs::directory_iterator(path)) {
             const fs::path path_entry = entry.path();
-            printerr(path_entry, path_entry.extension(), path_entry.stem());
             if (auto found = find_script_entry_point(path_entry)) {
                 to.emplace_back(std::move(*found));
                 emplaced_once = true;
@@ -71,7 +69,7 @@ struct LoadedConfigInfo {
     RaiiState state{luaL_newstate()};
     lua_State* L = state;
     auto source = read_file(config_file);
-    if (not source) return ErrorInfo("unable to read source");
+    if (not source) return ErrorInfo(std::format("unable to read source. ({}) ", config_file.string()));
     std::string bytecode = Luau::compile(*source);
     if (luau_load(L, "project config file", bytecode.data(), bytecode.size(), 0) != LUA_OK) {
         return ErrorInfo(bytecode);

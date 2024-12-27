@@ -163,26 +163,44 @@ export type stdprocess = {
         & ((pid: ProcessID)->Child),
     parse_args: (args: {string}) -> unknown,
 }
-export type ConsoleColor = {
-        Black: 'Black0x00',
-        Red: 'Red0x01',
-        Green: 'Green0x02',
-        Yellow: 'Yellow0x03',
-        Blue: 'Blue0x04',
-        Magenta: 'Magenta0x05',
-        Cyan: 'Cyan0x06',
-        White: 'White0x07',
-        BrightBlack: 'BrightBlack0x08',
-        BrightRed: 'BrightRed0x09',
-        BrightGreen: 'BrightGreen0x0a',
-        BrightYellow: 'BrightYellow0x0b',
-        BrightBlue: 'BrightBlue0x0c',
-        BrightMagenta: 'BrightMagenta0x0d',
-        BrightCyan: 'BrightCyan0x0e',
-        BrightWhite: 'BrightWhite0x0f',
+declare class ioAttribute end
+declare class ioColor end
+export type ioAttributes = {
+    ResetAll: ioAttribute,
+    Bold: ioAttribute,
+    Dim: ioAttribute,
+    Italic: ioAttribute,
+    Underline: ioAttribute,
+    Blink: ioAttribute,
+    Reverse: ioAttribute,
+    Hidden: ioAttribute,
+    Strikethrough: ioAttribute,
+    ResetBold: ioAttribute,
+    ResetItalic: ioAttribute,
+    ResetUnderline: ioAttribute,
+    ResetBlink: ioAttribute,
+    ResetReverse: ioAttribute,
+    ResetHidden: ioAttribute,
+    ResetStrikethrough: ioAttribute
 }
 export type stdio = {
-        ConsoleColor: ConsoleColor,
+    Attribute: ioAttributes,
+    Color: {
+        Black: ioColor,
+        Red: ioColor,
+        Green: ioColor,
+        Yellow: ioColor,
+        Blue: ioColor,
+        Magenta: ioColor,
+        Cyan: ioColor,
+        BrightBlack: ioColor,
+        BrightRed: ioColor,
+        BrightGreen: ioColor,
+        BrightBlue: ioColor,
+        BrightMagenta: ioColor,
+        BrightCyan: ioColor,
+        BrightWhite: ioColor,
+    }
 }
 export type stddatetime = {
     Date: (year: number, month: number, day: number) -> (),

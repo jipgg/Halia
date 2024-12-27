@@ -86,6 +86,7 @@ static std::optional<ErrorInfo> init_luau_state() noexcept {
     register_builtin_library(state_, library::filesystem);
     register_builtin_library(state_, library::math);
     register_builtin_library(state_, library::process);
+    register_builtin_library(state_, library::io);
     const luaL_Reg free_functions[] = {
         {"co_wait", library::co_wait},
         {"co_spawn", library::co_spawn},
